@@ -14,7 +14,7 @@ all: jalapeno-gateway jalapeno-client
 
 jalapeno-gateway:
 	mkdir -p bin
-	$(MAKE) -C ./cmd compile-gateway
+	$(MAKE) -C ./cmd/jalapeno-gateway compile-gateway
 
 jalapeno-client:
 	mkdir -p bin
