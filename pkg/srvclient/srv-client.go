@@ -10,6 +10,7 @@ import (
 type SrvClient interface {
 	GetStatus() SrvStatus
 	SetStatus(SrvStatus)
+	GetClientInterface() interface{}
 	Connect()
 	Disconnect()
 }
@@ -43,6 +44,10 @@ type srvClient struct {
 	connectorUP bool
 	monitorUP   bool
 	sync.WaitGroup
+}
+
+func (b *srvClient) GetClientInterface() interface{} {
+	return b.srv
 }
 
 func (b *srvClient) GetStatus() SrvStatus {

@@ -1,17 +1,13 @@
 package gateway
 
 import (
-	"context"
 	"net"
 	"time"
 
-	pbapi "github.com/cisco-ie/jalapeno-go-gateway/pkg/apis"
-	"github.com/cisco-ie/jalapeno-go-gateway/pkg/bgpclient"
-	"github.com/cisco-ie/jalapeno-go-gateway/pkg/dbclient"
+	//	pbapi "github.com/cisco-ie/jalapeno-go-gateway/pkg/apis"
 	"github.com/golang/glog"
+	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
 )
 
 var (
@@ -28,20 +24,36 @@ type Gateway interface {
 type gateway struct {
 	gSrv *grpc.Server
 	conn net.Listener
-	dbc  dbclient.DBClient
-	bgp  bgpclient.BGPClient
+	dbc  srvclient.SrvClient // dbclient.DBClient
+	bgp  srvclient.SrvClient // bgpclient.BGPClient
 }
 
 func (g *gateway) Start() {
 	glog.Infof("Starting Gateway's gRPC on %s\n", g.conn.Addr().String())
+	if g.dbc != nil {
+		g.dbc.(srvclient.SrvClient).Connect()
+	}
+	if g.bgp != nil {
+		g.bgp.(srvclient.SrvClient).Connect()
+	}
 	go g.gSrv.Serve(g.conn)
 }
 
 func (g *gateway) Stop() {
 	glog.Infof("Stopping Gateway's gRPC server...")
+	// First stopping grpc server
 	g.gSrv.Stop()
+	// Disconnecting Database client if it exists
+	if g.dbc != nil {
+		g.dbc.Disconnect()
+	}
+	// Disconnecting BGP client if it exists
+	if g.bgp != nil {
+		g.bgp.Disconnect()
+	}
 }
 
+/*
 func (g *gateway) VPN(reqVPN *pbapi.RequestVPN, stream pbapi.GatewayService_VPNServer) error {
 	ctx := stream.Context()
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -88,16 +100,16 @@ func (g *gateway) QoE(ctx context.Context, reqQoes *pbapi.RequestQoE) (*pbapi.Re
 	}
 	return replQoes, nil
 }
-
+*/
 // NewGateway return an instance of Gateway interface
-func NewGateway(conn net.Listener, dbc dbclient.DBClient, bgp bgpclient.BGPClient) Gateway {
+func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgp srvclient.SrvClient) Gateway {
 	gSrv := gateway{
 		conn: conn,
 		gSrv: grpc.NewServer([]grpc.ServerOption{}...),
 		dbc:  dbc,
 		bgp:  bgp,
 	}
-	pbapi.RegisterGatewayServiceServer(gSrv.gSrv, &gSrv)
+	//	pbapi.RegisterGatewayServiceServer(gSrv.gSrv, &gSrv)
 
 	return &gSrv
 
@@ -105,6 +117,7 @@ func NewGateway(conn net.Listener, dbc dbclient.DBClient, bgp bgpclient.BGPClien
 
 // processQoERequest start DB client and wait for either of 2 events, result comming back from a result channel
 // or a context timing out.
+/*
 func (g *gateway) processQoERequest(ctx context.Context, reqQoEs *pbapi.RequestQoE) (*pbapi.ResponseQoE, error) {
 	var replQoEs *pbapi.ResponseQoE
 	result := make(chan *pbapi.ResponseQoE)
@@ -139,3 +152,4 @@ func (g *gateway) processVPNRequest(ctx context.Context, req *bgpclient.VPNReque
 		return nil, ctx.Err()
 	}
 }
+*/

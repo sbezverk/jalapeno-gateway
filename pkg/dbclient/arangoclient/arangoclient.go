@@ -6,24 +6,18 @@ import (
 	"math"
 	"net"
 	"net/url"
-	"os"
-	"os/signal"
 	"strconv"
 	"time"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
 
-	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
+	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
 
 var (
 	arangoDBConnectTimeout = time.Duration(time.Second * 10)
 )
-
-// DBClient defines the interface for communication with DB process
-type DBClient interface {
-}
 
 type arangoSrv struct {
 	user       string
@@ -93,27 +87,12 @@ func (a *arangoSrv) Validator(addr string) error {
 	return nil
 }
 
-// NewArangoSrv returns an instance of a new Arango server process
-func NewArangoSrv(user string, pass string, dbName string, collection string) srvclient.Server {
+// NewArangoDBClient returns an instance of a new Arango database client process
+func NewArangoDBClient(user string, pass string, dbName string, collection string) dbclient.DBClient {
 	return &arangoSrv{
 		user:       user,
 		pass:       pass,
 		dbName:     dbName,
 		collection: collection,
 	}
-}
-func main() {
-	addr := "http://10.200.99.3:30852"
-	db, err := srvclient.NewSrvClient(addr, NewArangoSrv("root", "jalapeno", "jalapeno", "L3VPN_Prefixes"))
-	if err != nil {
-		fmt.Printf("failed to instantiate new Arango client with error: %+v\n", err)
-		os.Exit(1)
-
-	}
-	db.Connect()
-	sigc := make(chan os.Signal)
-	signal.Notify(sigc, os.Interrupt)
-	sig := <-sigc
-	fmt.Printf("received %v\n", sig)
-	db.Disconnect()
 }
