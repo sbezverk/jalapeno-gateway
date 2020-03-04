@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"fmt"
 	"net"
 	"time"
 
@@ -53,6 +54,20 @@ func (g *gateway) Stop() {
 	}
 }
 
+// Just for test
+func (g *gateway) accessClientInterface() {
+	dbi, ok := g.dbc.GetClientInterface().(srvclient.Server)
+	if !ok {
+		return
+	}
+	fmt.Printf("Extracted DB Client interface: %+v\n", dbi)
+	bgpi, ok := g.bgp.GetClientInterface().(srvclient.Server)
+	if !ok {
+		return
+	}
+	fmt.Printf("Extracted BGP Client interface: %+v\n", bgpi)
+}
+
 /*
 func (g *gateway) VPN(reqVPN *pbapi.RequestVPN, stream pbapi.GatewayService_VPNServer) error {
 	ctx := stream.Context()
@@ -102,12 +117,12 @@ func (g *gateway) QoE(ctx context.Context, reqQoes *pbapi.RequestQoE) (*pbapi.Re
 }
 */
 // NewGateway return an instance of Gateway interface
-func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgp srvclient.SrvClient) Gateway {
+func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgpc srvclient.SrvClient) Gateway {
 	gSrv := gateway{
 		conn: conn,
 		gSrv: grpc.NewServer([]grpc.ServerOption{}...),
 		dbc:  dbc,
-		bgp:  bgp,
+		bgp:  bgpc,
 	}
 	//	pbapi.RegisterGatewayServiceServer(gSrv.gSrv, &gSrv)
 

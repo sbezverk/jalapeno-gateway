@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/sbezverk/jalapeno-gateway/pkg/bgpclient v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sbezverk/jalapeno-gateway/pkg/bgpclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/gateway v0.0.0-00010101000000-000000000000

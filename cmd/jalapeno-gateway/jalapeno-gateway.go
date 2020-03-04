@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/golang/glog"
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	arango "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/gateway"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
@@ -55,15 +56,17 @@ func main() {
 		glog.Errorf("failed to make db client with with error: %+v", err)
 		os.Exit(1)
 	}
-	gSrv := gateway.NewGateway(conn, dbc, nil)
+	bgp, err := makeBGPClient()
+	if err != nil {
+		glog.Errorf("failed to make bgp client with with error: %+v", err)
+		os.Exit(1)
+	}
+	gSrv := gateway.NewGateway(conn, dbc, bgp)
 	gSrv.Start()
 
 	// For now just get stuck on stop channel, later add signal processing
 	stopCh := setupSignalHandler()
 	<-stopCh
-	// Clean up section
-	// Cleanup DB connection
-	// Cleanup gRPC server
 	gSrv.Stop()
 }
 
@@ -74,6 +77,15 @@ func makeDBClient() (srvclient.SrvClient, error) {
 		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
 	}
 	return db, nil
+}
+
+func makeBGPClient() (srvclient.SrvClient, error) {
+	addr := "192.168.80.103:5051"
+	bgp, err := srvclient.NewSrvClient(addr, bgpclient.NewBGPSrv())
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate new bgp client with error: %w", err)
+	}
+	return bgp, nil
 }
 
 var (
