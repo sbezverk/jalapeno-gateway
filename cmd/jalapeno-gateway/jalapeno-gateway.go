@@ -86,7 +86,7 @@ func main() {
 }
 
 func makeDBClient(addr string) (srvclient.SrvClient, error) {
-	// addr := "arangodb.jalapeno:8529"
+	// TODO, Authentication credentials should be passed as a parameters.
 	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno", "L3VPN_Prefixes"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
@@ -95,7 +95,6 @@ func makeDBClient(addr string) (srvclient.SrvClient, error) {
 }
 
 func makeBGPClient(addr string) (srvclient.SrvClient, error) {
-	//	addr := "gobgpd:5051"
 	bgp, err := srvclient.NewSrvClient(addr, bgpclient.NewBGPSrv())
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new bgp client with error: %w", err)

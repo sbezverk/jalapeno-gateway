@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -65,7 +66,11 @@ func (a *arangoSrv) Monitor(addr string) error {
 }
 
 func (a *arangoSrv) Validator(addr string) error {
-	host, port, _ := net.SplitHostPort(addr)
+	endpoint, err := url.Parse(addr)
+	if err != nil {
+		return err
+	}
+	host, port, _ := net.SplitHostPort(endpoint.Host)
 	if host == "" || port == "" {
 		return fmt.Errorf("host or port cannot be ''")
 	}

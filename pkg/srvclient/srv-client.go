@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // SrvClient defines methods to interact with a server process
@@ -13,11 +15,12 @@ type SrvClient interface {
 	GetClientInterface() interface{}
 	Connect()
 	Disconnect()
+	Addr() string
 }
 
 var (
-	reconnectTimeout  int = 1
-	keepaliveInterval int = 2
+	reconnectTimeout  int = 5
+	keepaliveInterval int = 10
 )
 
 // SrvStatus defines a server status enumeration.
@@ -74,10 +77,11 @@ func (b *srvClient) Connect() {
 }
 
 func (b *srvClient) Disconnect() {
+	glog.V(5).Infof("Shutting down the client for the server: %s", b.Addr())
 	b.stopMonitor <- struct{}{}
 	b.stopConnector <- struct{}{}
 	b.WaitGroup.Wait()
-	// fmt.Printf("All clean, can exit now...\n")
+	glog.V(5).Infof("Shutdown of the client for the server: %s completed.", b.Addr())
 	b.SetStatus(DOWN)
 }
 
@@ -92,7 +96,7 @@ func (b *srvClient) connector() {
 		b.Lock()
 		b.connectorUP = false
 		b.Unlock()
-		// fmt.Printf("Connector exiting\n")
+		glog.V(5).Infof("Connector for the server: %s exiting", b.Addr())
 		b.WaitGroup.Done()
 	}()
 	// Main connector loop
@@ -102,16 +106,16 @@ func (b *srvClient) connector() {
 		case <-b.stopConnector:
 			return
 		case <-b.reconnect:
-			// fmt.Printf("Receive reconnect request\n")
+			glog.V(5).Infof("Connector for the server: %s received connect request.", b.Addr())
 			b.SetStatus(CONNECT)
 			for b.GetStatus() != UP {
-				// Attempting to connect to bgbgpd
-				if err := b.srv.Connector(b.srvAddr); err == nil {
+				// Attempting to connect to server
+				if err := b.srv.Connector(b.Addr()); err == nil {
 					b.SetStatus(UP)
-					// fmt.Printf("connect succeeded\n")
+					glog.V(5).Infof("Connection to the server: %s succeeded", b.Addr())
 				} else {
 					timeout := time.NewTimer(time.Second * time.Duration(reconnectTimeout))
-					// fmt.Printf("failed to connect with error: %+v reattempting in %d seconds\n", err, reconnectTimeout)
+					glog.Errorf("Connector failed to reconnect to the server: %s with error: %+v, retrying in %d seconds.", b.Addr(), err, reconnectTimeout)
 					select {
 					case <-b.stopConnector:
 						return
@@ -136,7 +140,7 @@ func (b *srvClient) monitor() {
 		b.Lock()
 		b.monitorUP = false
 		b.Unlock()
-		// fmt.Printf("monitor exiting\n")
+		glog.V(5).Infof("Monitor for the server: %s exiting", b.Addr())
 		b.WaitGroup.Done()
 	}()
 	for {
@@ -147,17 +151,17 @@ func (b *srvClient) monitor() {
 			b.reconnect <- struct{}{}
 			select {
 			case <-b.work:
-				// fmt.Printf("Connection is back up\n")
+				glog.V(5).Infof("Connection to the server: %s succeeded resuming keepalives", b.Addr())
 			case <-b.stopMonitor:
 				return
 			}
 		case UP:
-			if err := b.srv.Monitor(b.srvAddr); err != nil {
-				// fmt.Printf("monitor reports error: %+v\n", err)
+			if err := b.srv.Monitor(b.Addr()); err != nil {
+				glog.Errorf("keepalive with the server %s failed with error: %+v", b.Addr(), err)
 				b.SetStatus(DOWN)
 			} else {
 				timeout := time.NewTimer(time.Second * time.Duration(keepaliveInterval))
-				// fmt.Printf("keepalive succeeded next keepalive in %d seconds\n", keepaliveInterval)
+				glog.V(6).Infof("keepalive with the server %s succeeded, next keepalive in %d seconds.", b.Addr(), keepaliveInterval)
 				select {
 				case <-b.stopMonitor:
 					return
@@ -167,6 +171,10 @@ func (b *srvClient) monitor() {
 		case CONNECT:
 		}
 	}
+}
+
+func (b *srvClient) Addr() string {
+	return b.srvAddr
 }
 
 // NewSrvClient return a new instance of bgp client

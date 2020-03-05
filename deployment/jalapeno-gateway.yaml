@@ -50,7 +50,7 @@ spec:
               mountPath: /config
           args:
             - --database-address
-            - "arangodb.jalapeno:8529"
+            - "http://arangodb.jalapeno:8529"
             - --gobgp-address
             - "gobgpd:5051"
             - --v

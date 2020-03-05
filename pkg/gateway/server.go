@@ -30,26 +30,30 @@ type gateway struct {
 }
 
 func (g *gateway) Start() {
-	glog.Infof("Starting Gateway's gRPC on %s\n", g.conn.Addr().String())
+	glog.V(3).Infof("Starting Gateway's gRPC on %s", g.conn.Addr().String())
 	if g.dbc != nil {
+		glog.V(5).Infof("Starting GraphDB client process for server: %s", g.dbc.Addr())
 		g.dbc.(srvclient.SrvClient).Connect()
 	}
 	if g.bgp != nil {
+		glog.V(5).Infof("Starting GoBGPD client process for server: %s", g.bgp.Addr())
 		g.bgp.(srvclient.SrvClient).Connect()
 	}
 	go g.gSrv.Serve(g.conn)
 }
 
 func (g *gateway) Stop() {
-	glog.Infof("Stopping Gateway's gRPC server...")
+	glog.V(3).Infof("Stopping Gateway's gRPC server...")
 	// First stopping grpc server
 	g.gSrv.Stop()
 	// Disconnecting Database client if it exists
 	if g.dbc != nil {
+		glog.V(5).Infof("Stopping GraphDB client process for server: %s", g.dbc.Addr())
 		g.dbc.Disconnect()
 	}
 	// Disconnecting BGP client if it exists
 	if g.bgp != nil {
+		glog.V(5).Infof("Stopping GoBGPD client process for server: %s", g.bgp.Addr())
 		g.bgp.Disconnect()
 	}
 }
