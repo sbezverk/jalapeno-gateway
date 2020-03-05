@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -66,16 +65,16 @@ func (a *arangoSrv) Monitor(addr string) error {
 }
 
 func (a *arangoSrv) Validator(addr string) error {
-	endpoint, err := url.Parse(addr)
-	if err != nil {
-		return err
-	}
-	host, port, _ := net.SplitHostPort(endpoint.Host)
+	host, port, _ := net.SplitHostPort(addr)
 	if host == "" || port == "" {
 		return fmt.Errorf("host or port cannot be ''")
 	}
-	if net.ParseIP(host) == nil {
-		return fmt.Errorf("fail to parse host part of address")
+	// Try to resolve if the hostname was used in the address
+	if ip, err := net.LookupIP(host); err != nil || ip == nil {
+		// Check if IP address was used in address instead of a host name
+		if net.ParseIP(host) == nil {
+			return fmt.Errorf("fail to parse host part of address")
+		}
 	}
 	np, err := strconv.Atoi(port)
 	if err != nil {

@@ -77,7 +77,7 @@ func (b *srvClient) Disconnect() {
 	b.stopMonitor <- struct{}{}
 	b.stopConnector <- struct{}{}
 	b.WaitGroup.Wait()
-	fmt.Printf("All clean, can exit now...\n")
+	// fmt.Printf("All clean, can exit now...\n")
 	b.SetStatus(DOWN)
 }
 
@@ -92,7 +92,7 @@ func (b *srvClient) connector() {
 		b.Lock()
 		b.connectorUP = false
 		b.Unlock()
-		fmt.Printf("Connector exiting\n")
+		// fmt.Printf("Connector exiting\n")
 		b.WaitGroup.Done()
 	}()
 	// Main connector loop
@@ -102,16 +102,16 @@ func (b *srvClient) connector() {
 		case <-b.stopConnector:
 			return
 		case <-b.reconnect:
-			fmt.Printf("Receive reconnect request\n")
+			// fmt.Printf("Receive reconnect request\n")
 			b.SetStatus(CONNECT)
 			for b.GetStatus() != UP {
 				// Attempting to connect to bgbgpd
 				if err := b.srv.Connector(b.srvAddr); err == nil {
 					b.SetStatus(UP)
-					fmt.Printf("connect succeeded\n")
+					// fmt.Printf("connect succeeded\n")
 				} else {
 					timeout := time.NewTimer(time.Second * time.Duration(reconnectTimeout))
-					fmt.Printf("failed to connect with error: %+v reattempting in %d seconds\n", err, reconnectTimeout)
+					// fmt.Printf("failed to connect with error: %+v reattempting in %d seconds\n", err, reconnectTimeout)
 					select {
 					case <-b.stopConnector:
 						return
@@ -136,7 +136,7 @@ func (b *srvClient) monitor() {
 		b.Lock()
 		b.monitorUP = false
 		b.Unlock()
-		fmt.Printf("monitor exiting\n")
+		// fmt.Printf("monitor exiting\n")
 		b.WaitGroup.Done()
 	}()
 	for {
@@ -147,17 +147,17 @@ func (b *srvClient) monitor() {
 			b.reconnect <- struct{}{}
 			select {
 			case <-b.work:
-				fmt.Printf("Connection is back up\n")
+				// fmt.Printf("Connection is back up\n")
 			case <-b.stopMonitor:
 				return
 			}
 		case UP:
 			if err := b.srv.Monitor(b.srvAddr); err != nil {
-				fmt.Printf("monitor reports error: %+v\n", err)
+				// fmt.Printf("monitor reports error: %+v\n", err)
 				b.SetStatus(DOWN)
 			} else {
 				timeout := time.NewTimer(time.Second * time.Duration(keepaliveInterval))
-				fmt.Printf("keepalive succeeded next keepalive in %d seconds\n", keepaliveInterval)
+				// fmt.Printf("keepalive succeeded next keepalive in %d seconds\n", keepaliveInterval)
 				select {
 				case <-b.stopMonitor:
 					return

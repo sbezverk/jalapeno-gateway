@@ -28,7 +28,7 @@ kind: Deployment
 metadata:
   name: jalapeno-gateway
 spec:
-  replicas: 2 
+  replicas: 1 
   selector:
     matchLabels:
       app: jalapeno-gateway
@@ -48,10 +48,11 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
-          env:
-            - name: GATEWAY_PORT
-              value: "40040"
           args:
+            - --database-address
+            - "arangodb.jalapeno:8529"
+            - --gobgp-address
+            - "gobgpd:5051"
             - --v
             - "5"
       volumes:

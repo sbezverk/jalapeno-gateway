@@ -18,49 +18,64 @@ import (
 
 const (
 	// DefaultGatewayPort defines default port Gateway's gRPC server listens on
-	// this port is a container port, not the port used for Gateway Kubernetes Service.
-	defaultGatewayPort = "15151"
+	// this port is a container port, not the port used for Jalapeno Gateway kubernetes Service.
+	defaultGatewayPort = "40040"
 )
+
+var (
+	dbAddr      string
+	bgpAddr     string
+	gatewayPort string
+)
+
+func init() {
+	flag.StringVar(&dbAddr, "database-address", "", "{dns name}:port or X.X.X.X:port of the graph database, for example: arangodb.jalapeno:8529")
+	flag.StringVar(&bgpAddr, "gobgp-address", "", "{dns name}:port or X.X.X.X:port of the gobgp daemon, for example: gobgpd:5051")
+	flag.StringVar(&gatewayPort, "gateway-port", "", "internal container port used by Jalapeno Gateway gRPC server")
+}
 
 func main() {
 	flag.Parse()
 	flag.Set("logtostderr", "true")
 
-	// Getting port for gRPC server to listen on, from environment varialbe
-	// GATEWAY_PORT
-	strPort := os.Getenv("GATEWAY_PORT")
-	if strPort == "" {
-		// TODO, should it fallback to the default port?
-		strPort = defaultGatewayPort
-		glog.Warningf("env variable \"GATEWAY_PORT\" is not defined, using default Gateway port: %s", strPort)
-	}
-	srvPort, err := strconv.Atoi(strPort)
-	if err != nil {
-		glog.Warningf("env variable \"GATEWAY_PORT\" containes an invalid value %s, using default Gateway port instead: %s", strPort, defaultGatewayPort)
-		srvPort, _ = strconv.Atoi(defaultGatewayPort)
-	}
-	// The value of port cannot be more than max uint16
-	if srvPort == 0 || srvPort > math.MaxUint16 {
-		glog.Warningf("env variable \"GATEWAY_PORT\" containes an invalid value %d, using default Gateway port instead: %s\n", srvPort, defaultGatewayPort)
-		srvPort, _ = strconv.Atoi(defaultGatewayPort)
+	grpcPort := defaultGatewayPort
+	if gatewayPort != "" {
+		if srvPort, err := strconv.Atoi(gatewayPort); err == nil {
+			if srvPort != 0 && srvPort < math.MaxUint16 {
+				grpcPort = gatewayPort
+			}
+		}
 	}
 
 	// Initialize gRPC server
-	conn, err := net.Listen("tcp", ":"+strPort)
+	conn, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
 		glog.Errorf("failed to setup listener with with error: %+v", err)
 		os.Exit(1)
 	}
-	dbc, err := makeDBClient()
+
+	if dbAddr == "" {
+		glog.Errorf("database address cannot be ''")
+		os.Exit(1)
+	}
+
+	dbc, err := makeDBClient(dbAddr)
 	if err != nil {
 		glog.Errorf("failed to make db client with with error: %+v", err)
 		os.Exit(1)
 	}
-	bgp, err := makeBGPClient()
-	if err != nil {
-		glog.Errorf("failed to make bgp client with with error: %+v", err)
-		os.Exit(1)
+
+	// In general it is possible to run without gpbgp process, if it is not specified
+	// then corresponding client process will not be started
+	var bgp srvclient.SrvClient
+	if bgpAddr != "" {
+		bgp, err = makeBGPClient(bgpAddr)
+		if err != nil {
+			glog.Errorf("failed to make bgp client with with error: %+v", err)
+			os.Exit(1)
+		}
 	}
+
 	gSrv := gateway.NewGateway(conn, dbc, bgp)
 	gSrv.Start()
 
@@ -70,8 +85,8 @@ func main() {
 	gSrv.Stop()
 }
 
-func makeDBClient() (srvclient.SrvClient, error) {
-	addr := "http://10.200.99.3:30852"
+func makeDBClient(addr string) (srvclient.SrvClient, error) {
+	// addr := "arangodb.jalapeno:8529"
 	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno", "L3VPN_Prefixes"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
@@ -79,8 +94,8 @@ func makeDBClient() (srvclient.SrvClient, error) {
 	return db, nil
 }
 
-func makeBGPClient() (srvclient.SrvClient, error) {
-	addr := "192.168.80.103:5051"
+func makeBGPClient(addr string) (srvclient.SrvClient, error) {
+	//	addr := "gobgpd:5051"
 	bgp, err := srvclient.NewSrvClient(addr, bgpclient.NewBGPSrv())
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new bgp client with error: %w", err)

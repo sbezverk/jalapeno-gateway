@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"os"
-	"os/signal"
 	"strconv"
 	"sync"
 
@@ -60,8 +58,12 @@ func (bgp *bgpSrv) Validator(addr string) error {
 	if host == "" || port == "" {
 		return fmt.Errorf("host or port cannot be ''")
 	}
-	if net.ParseIP(host) == nil {
-		return fmt.Errorf("fail to parse host part of address")
+	// Try to resolve if the hostname was used in the address
+	if ip, err := net.LookupIP(host); err != nil || ip == nil {
+		// Check if IP address was used in address instead of a host name
+		if net.ParseIP(host) == nil {
+			return fmt.Errorf("fail to parse host part of address")
+		}
 	}
 	np, err := strconv.Atoi(port)
 	if err != nil {
@@ -76,19 +78,4 @@ func (bgp *bgpSrv) Validator(addr string) error {
 // NewBGPSrv returns an instance of a new bgp server process
 func NewBGPSrv() srvclient.Server {
 	return &bgpSrv{}
-}
-func main() {
-	addr := "192.168.80.103:5051"
-	b, err := srvclient.NewSrvClient(addr, NewBGPSrv())
-	if err != nil {
-		fmt.Printf("failed to instantiate new bgp client with error: %+v\n", err)
-		os.Exit(1)
-
-	}
-	b.Connect()
-	sigc := make(chan os.Signal)
-	signal.Notify(sigc, os.Interrupt)
-	sig := <-sigc
-	fmt.Printf("received %v\n", sig)
-	b.Disconnect()
 }

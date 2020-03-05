@@ -1,4 +1,4 @@
 FROM scratch
 
-COPY ./bin/jalapeno-gateway /jalapeno-gateway
+COPY ./cmd/bin/jalapeno-gateway /jalapeno-gateway
 ENTRYPOINT ["/jalapeno-gateway"]
