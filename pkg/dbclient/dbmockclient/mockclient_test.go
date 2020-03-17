@@ -118,3 +118,70 @@ func TestFilterByPrefix(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterByRT(t *testing.T) {
+	tests := []struct {
+		name    string
+		records []Record
+		rts     []string
+		// expected defines a number of record left after filtering
+		expected int
+	}{
+		{
+			name: "Match of 1 RT",
+			records: []Record{
+				{
+					RT: "100:200",
+				},
+				{
+					RT: "100:300",
+				},
+				{
+					RT: "100:400",
+				},
+			},
+			rts:      []string{"100:200"},
+			expected: 1,
+		},
+		{
+			name: "Match of 2 RT",
+			records: []Record{
+				{
+					RT: "100:200",
+				},
+				{
+					RT: "100:300,100:400",
+				},
+				{
+					RT: "100:400,100:300",
+				},
+			},
+			rts:      []string{"100:300", "100:400"},
+			expected: 2,
+		},
+		{
+			name: "No Match of 2 RT",
+			records: []Record{
+				{
+					RT: "100:200",
+				},
+				{
+					RT: "100:300,100:400",
+				},
+				{
+					RT: "100:400,100:300",
+				},
+			},
+			rts:      []string{"100:300", "100:500"},
+			expected: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := filterByRT(tt.rts, tt.records)
+			if len(f) != tt.expected {
+				t.Errorf("expected records length %d, got %d", tt.expected, len(f))
+			}
+		})
+	}
+}

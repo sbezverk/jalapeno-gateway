@@ -24,7 +24,7 @@ type Record struct {
 	Prefix          string `json:"VPN_Prefix,omitempty"`
 	Mask            uint32 `json:"VPN_Prefix_Len,omitempty"`
 	RouterID        string `json:"RouterID,omitempty"`
-	PrefixSID       string `json:"PrefixSID,omitempty"`
+	PrefixSID       uint32 `json:"PrefixSID,omitempty"`
 	VPN             uint32 `json:"VPN_Label,omitempty"`
 	RD              string `json:"RD"`
 	RT              string `json:"RT,omitempty"`
@@ -37,7 +37,7 @@ type mockSrv struct {
 }
 
 func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
-	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
+	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
 
 	// Initial lookup for requested RD, if it is not in the store, return error
 	records, ok := m.vpnStore[req.RD]
@@ -60,7 +60,7 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 
 	resp := dbclient.L3VpnResp{
 		VpnLabel: records[0].VPN,
-		// SidLabel: records[0].PrefixSID,
+		SidLabel: records[0].PrefixSID,
 	}
 
 	return &resp, nil
@@ -93,13 +93,23 @@ func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
 
 func filterByRT(rts []string, records []Record) []Record {
 	result := make([]Record, 0)
+	match := 0
 	for _, r := range records {
-		// RT in the record comes in "rt=100:100 rt=100:101" format
-		rrts := strings.Split(r.RT, " ")
-		for i := 0; i < len(rrts); i++ {
-			rrts[i] = strings.Replace(rrts[i], "rt=", "", -1)
+		for _, rrt := range strings.Split(r.RT, ",") {
+			for _, rt := range rts {
+				if rt == rrt {
+					match++
+				}
+			}
 		}
+		// If number of matches == length of requested rts, then all requested rts were found
+		// within a record's RT list.
+		if match == len(rts) {
+			result = append(result, r)
+		}
+		match = 0
 	}
+
 	return result
 }
 

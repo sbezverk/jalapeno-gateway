@@ -1,4 +1,5 @@
 FROM scratch
 
+COPY ./pkg/dbclient/dbmockclient/testdata.json /testdata.json
 COPY ./cmd/bin/jalapeno-gateway /jalapeno-gateway
 ENTRYPOINT ["/jalapeno-gateway"]

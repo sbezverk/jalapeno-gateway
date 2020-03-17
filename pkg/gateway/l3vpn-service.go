@@ -55,7 +55,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		glog.V(5).Infof("L3VPN request for prefix: %s/%d", addr, mask)
 	}
 
-	rq := dbclient.NewL3VpnReq(rd.String(), rts, addr, mask)
+	rq := dbclient.NewL3VpnReq(rd.String(), rts, addr, uint32(mask))
 
 	rs, err := dbi.L3VPNRequest(context.TODO(), rq)
 	if err != nil {

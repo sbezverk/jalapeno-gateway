@@ -12,6 +12,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	arango "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient"
+	mock "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/dbmockclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/gateway"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 )
@@ -26,12 +27,14 @@ var (
 	dbAddr      string
 	bgpAddr     string
 	gatewayPort string
+	mockdata    bool
 )
 
 func init() {
 	flag.StringVar(&dbAddr, "database-address", "", "{dns name}:port or X.X.X.X:port of the graph database, for example: arangodb.jalapeno:8529")
 	flag.StringVar(&bgpAddr, "gobgp-address", "", "{dns name}:port or X.X.X.X:port of the gobgp daemon, for example: gobgpd:5051")
 	flag.StringVar(&gatewayPort, "gateway-port", "", "internal container port used by Jalapeno Gateway gRPC server")
+	flag.BoolVar(&mockdata, "mock-data", false, "when set to true, uses file testdata.json as a database source")
 }
 
 func main() {
@@ -59,12 +62,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbc, err := makeDBClient(dbAddr)
-	if err != nil {
-		glog.Errorf("failed to make db client with with error: %+v", err)
-		os.Exit(1)
+	var dbc srvclient.SrvClient
+	if !mockdata {
+		dbc, err = makeDBClient(dbAddr)
+		if err != nil {
+			glog.Errorf("failed to make db client with with error: %+v", err)
+			os.Exit(1)
+		}
+	} else {
+		dbc, err = makeMockDBClient()
+		if err != nil {
+			glog.Errorf("failed to make db client with with error: %+v", err)
+			os.Exit(1)
+		}
 	}
-
 	// In general it is possible to run without gpbgp process, if it is not specified
 	// then corresponding client process will not be started
 	var bgp srvclient.SrvClient
@@ -83,6 +94,15 @@ func main() {
 	stopCh := setupSignalHandler()
 	<-stopCh
 	gSrv.Stop()
+}
+
+func makeMockDBClient() (srvclient.SrvClient, error) {
+	// TODO, Authentication credentials should be passed as a parameters.
+	db, err := srvclient.NewSrvClient("", mock.NewMockDBClient("/testdata.json"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate new Mock DB client with error: %w", err)
+	}
+	return db, nil
 }
 
 func makeDBClient(addr string) (srvclient.SrvClient, error) {

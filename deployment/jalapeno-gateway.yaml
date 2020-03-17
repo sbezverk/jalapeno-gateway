@@ -55,6 +55,8 @@ spec:
             - "gobgpd:5051"
             - --v
             - "5"
+            - --mock-data
+            - "true"
       volumes:
         - name: config-volume
           configMap:
