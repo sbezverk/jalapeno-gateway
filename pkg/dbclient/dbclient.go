@@ -24,13 +24,13 @@ type L3VpnReq struct {
 	RD         string
 	RT         []string
 	Prefix     string
-	MaskLength int
+	MaskLength uint32
 }
 
 // L3VPNPrefix defines L3 VPN prefix Database object
 type L3VPNPrefix struct {
 	Prefix     string
-	MaskLength int
+	MaskLength uint32
 	RT         []string
 }
 
@@ -42,7 +42,7 @@ type L3VpnResp struct {
 }
 
 // NewL3VpnReq instantiates a L3 VPN Databse Request object
-func NewL3VpnReq(rd string, rt []string, prefix string, masklength int) *L3VpnReq {
+func NewL3VpnReq(rd string, rt []string, prefix string, masklength uint32) *L3VpnReq {
 	r := L3VpnReq{}
 	r.RD = rd
 	if len(rt) != 0 {

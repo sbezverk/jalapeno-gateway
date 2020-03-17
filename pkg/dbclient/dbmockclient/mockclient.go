@@ -3,8 +3,10 @@ package dbmockclient
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/golang/glog"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -36,7 +38,32 @@ type mockSrv struct {
 
 func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
 	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
-	return &dbclient.L3VpnResp{VpnLabel: uint32(24001), SidLabel: uint32(10004)}, nil
+
+	// Initial lookup for requested RD, if it is not in the store, return error
+	records, ok := m.vpnStore[req.RD]
+	if !ok {
+		return nil, fmt.Errorf("RD %s is not found", req.RD)
+	}
+	// Requested RD was found, applying RT and Prefix optional constraints
+	if req.Prefix != "" {
+		records = filterByPrefix(req.Prefix, req.MaskLength, records)
+	}
+
+	if len(req.RT) != 0 {
+		records = filterByRT(req.RT, records)
+	}
+
+	if len(records) == 0 {
+		// All filtered, returning error
+		return nil, fmt.Errorf("no matching records to found")
+	}
+
+	resp := dbclient.L3VpnResp{
+		VpnLabel: records[0].VPN,
+		// SidLabel: records[0].PrefixSID,
+	}
+
+	return &resp, nil
 }
 
 func (m *mockSrv) Connector(addr string) error {
@@ -50,6 +77,30 @@ func (m *mockSrv) Monitor(addr string) error {
 
 func (m *mockSrv) Validator(addr string) error {
 	return nil
+}
+
+func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
+	result := make([]Record, 0)
+	for _, r := range records {
+		if r.Prefix == prefix && r.Mask == mask {
+			result = append(result, r)
+			break
+		}
+
+	}
+	return result
+}
+
+func filterByRT(rts []string, records []Record) []Record {
+	result := make([]Record, 0)
+	for _, r := range records {
+		// RT in the record comes in "rt=100:100 rt=100:101" format
+		rrts := strings.Split(r.RT, " ")
+		for i := 0; i < len(rrts); i++ {
+			rrts[i] = strings.Replace(rrts[i], "rt=", "", -1)
+		}
+	}
+	return result
 }
 
 // NewMockDBClient returns an instance of a new mock database client process
