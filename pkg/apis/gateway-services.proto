@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package apis;
+
+// Errors defines error codes which a gateway can return to a client
+enum GatewayErrors {
+  OK = 0;
+  // Returned when a gateway encountered a generic error
+  EIO = 1;
+  // Returned when request key does not exist
+  ENOENT = 2;
+  // Returned when an operation triggered by the client's requested timed out
+  // and was canceled
+  ETIMEDOUT = 3;
+  // Returned when a gateway cannot reach a DB host
+  EHOSTDOWN = 4;
+}
+
+message RouteDistinguisherTwoOctetAS {
+  uint32 admin = 1;
+  uint32 assigned = 2;
+}
+message RouteDistinguisherIPAddress {
+  string admin = 1;
+  uint32 assigned = 2;
+}
+message RouteDistinguisherFourOctetAS {
+  uint32 admin = 1;
+  uint32 assigned = 2;
+}
+message TwoOctetAsSpecificExtended {
+  bool is_transitive = 1;
+  uint32 sub_type = 2;
+  uint32 as = 3;
+  uint32 local_admin = 4;
+}
+
+message IPv4AddressSpecificExtended {
+  bool is_transitive = 1;
+  uint32 sub_type = 2;
+  string address = 3;
+  uint32 local_admin = 4;
+}
+
+message FourOctetAsSpecificExtended {
+  bool is_transitive = 1;
+  uint32 sub_type = 2;
+  uint32 as = 3;
+  uint32 local_admin = 4;
+}
+
+message Prefix {
+  bytes address = 1;
+  uint32 mask_length = 2;
+  // List of the Route Targets. Each must be one of
+  // TwoOctetAsSpecificExtended,
+  // IPv4AddressSpecificExtended,
+  // or FourOctetAsSpecificExtended.
+  repeated google.protobuf.Any rt = 3;
+}
+// RequestVPN call used to request L3 VPN entries, identified by one Route
+// Distinguisher which can be one of listed below types, and one or more Route
+// Targets.
+message L3VPNRequest {
+  // Route Distinguisher must be one of
+  // RouteDistinguisherTwoOctetAS,
+  // RouteDistinguisherIPAddressAS,
+  // or RouteDistinguisherFourOctetAS.
+  // Mandatory parameter
+  google.protobuf.Any rd = 1;
+  // List of the Route Targets. Each must be one of
+  // TwoOctetAsSpecificExtended,
+  // IPv4AddressSpecificExtended,
+  // or FourOctetAsSpecificExtended.
+  // Optional parameter
+  repeated google.protobuf.Any rt = 2;
+  // vpn_prefix is L3 VPN prefix which vpn label is requested for.
+  // Optional parameter
+  Prefix vpn_prefix = 3;
+}
+
+message L3VPNResponse {
+  uint32 vpn_label = 1;
+  uint32 sid_label = 2;
+  repeated Prefix vpn_prefix = 3;
+}
+
+// GatewayService lists rpc services supported by the gateway api
+service GatewayService {
+  // API to request L3 VPN label and list of prefixes for VRF specified by RD.
+  // Optionally RT and/or Prefix can be specified as additional selection
+  // creterias.
+  rpc L3VPN(L3VPNRequest) returns (L3VPNResponse);
+}

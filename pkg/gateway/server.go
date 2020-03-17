@@ -5,8 +5,8 @@ import (
 	"net"
 	"time"
 
-	//	pbapi "github.com/cisco-ie/jalapeno-go-gateway/pkg/apis"
 	"github.com/golang/glog"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 	"google.golang.org/grpc"
 )
@@ -102,24 +102,8 @@ func (g *gateway) VPN(reqVPN *pbapi.RequestVPN, stream pbapi.GatewayService_VPNS
 
 	return nil
 }
-
-func (g *gateway) QoE(ctx context.Context, reqQoes *pbapi.RequestQoE) (*pbapi.ResponseQoE, error) {
-	peer, ok := peer.FromContext(ctx)
-	if ok {
-		glog.V(5).Infof("QoE request from client: %+v", *peer)
-	}
-	// Gateway has DB Interface which is used to get requested by a client QoE information.
-	// To protect from hung connections, the context passed to DB client interface will be canceled
-	// up on reaching a timeout.
-	dbctx, cancel := context.WithTimeout(ctx, maxRequestProcessTime)
-	defer cancel()
-	replQoes, err := g.processQoERequest(dbctx, reqQoes)
-	if err != nil {
-		return nil, err
-	}
-	return replQoes, nil
-}
 */
+
 // NewGateway return an instance of Gateway interface
 func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgpc srvclient.SrvClient) Gateway {
 	gSrv := gateway{
@@ -128,10 +112,9 @@ func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgpc srvclient.SrvCl
 		dbc:  dbc,
 		bgp:  bgpc,
 	}
-	//	pbapi.RegisterGatewayServiceServer(gSrv.gSrv, &gSrv)
+	pbapi.RegisterGatewayServiceServer(gSrv.gSrv, &gSrv)
 
 	return &gSrv
-
 }
 
 // processQoERequest start DB client and wait for either of 2 events, result comming back from a result channel

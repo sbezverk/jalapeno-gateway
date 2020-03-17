@@ -3,10 +3,11 @@ module jalapeno-gateway
 go 1.13
 
 require (
+	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/sbezverk/jalapeno-gateway/pkg/apis v0.0.0-00010101000000-000000000000 // indirect
 	github.com/sbezverk/jalapeno-gateway/pkg/bgpclient v0.0.0-00010101000000-000000000000
-	github.com/sbezverk/jalapeno-gateway/pkg/dbclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/gateway v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/srvclient v0.0.0-00010101000000-000000000000
@@ -16,6 +17,7 @@ require (
 )
 
 replace (
+	github.com/sbezverk/jalapeno-gateway/pkg/apis => ./pkg/apis
 	github.com/sbezverk/jalapeno-gateway/pkg/bgpclient => ./pkg/bgpclient
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient => ./pkg/dbclient
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient => ./pkg/dbclient/arangoclient

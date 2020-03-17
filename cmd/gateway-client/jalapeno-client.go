@@ -5,18 +5,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"math"
 	"net"
 	"os"
 	"strconv"
 	"strings"
 
-	pbapi "github.com/cisco-ie/jalapeno-go-gateway/pkg/apis"
-	"github.com/cisco-ie/jalapeno-go-gateway/pkg/bgpclient"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/osrg/gobgp/pkg/packet/bgp"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -47,22 +46,17 @@ func main() {
 	requestLoop(ctx, gwclient)
 }
 
-func getVPN(ctx context.Context, gwclient pbapi.GatewayServiceClient, req *pbapi.RequestVPN) (uint32, error) {
-	stream, err := gwclient.VPN(ctx, req)
+func getVPN(ctx context.Context, gwclient pbapi.GatewayServiceClient, req *pbapi.L3VPNRequest) (uint32, error) {
+	resp, err := gwclient.L3VPN(ctx, req)
 	if err != nil {
 		return 0, fmt.Errorf("failed to request VPN label with error: %+v", err)
 	}
-	entry, err := stream.Recv()
-	if err == io.EOF {
-		return 0, fmt.Errorf("received EOF")
+	glog.Infof("Received label: %+v", resp.Label)
+
+	if resp.VpnPrefix != nil {
+		glog.Infof("Received prefixes: %+v", resp.VpnPrefix)
 	}
-	if err != nil {
-		return 0, err
-	}
-	if entry == nil {
-		return 0, fmt.Errorf("received empty message")
-	}
-	return entry.Label, nil
+	return resp.Label, nil
 }
 
 func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
@@ -85,9 +79,7 @@ func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
 		if err != nil {
 			glog.Errorf("failed to marshal RD: %s with error: %+v, try again...", rd, err)
 		}
-		req := &pbapi.RequestVPN{
-			Rd: mrd,
-		}
+		req := &pbapi.L3VPNRequest{Rd: mrd}
 		label, err := getVPN(ctx, gwclient, req)
 		if err != nil {
 			glog.Errorf("failed to receive label for  RD: %s with error: %+v, try again...", rd, err)
