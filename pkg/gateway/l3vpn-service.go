@@ -43,7 +43,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 			return &pbapi.L3VPNResponse{}, err
 		}
 		for _, r := range rt {
-			rts = append(rts, "rt="+r.String())
+			rts = append(rts, r.String())
 		}
 	}
 	// Check for an optional prefix
@@ -55,7 +55,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		glog.V(5).Infof("L3VPN request for prefix: %s/%d", addr, mask)
 	}
 
-	rq := dbclient.NewL3VpnReq(rd.String(), rts, addr, uint32(mask))
+	rq := dbclient.NewL3VpnReq(rd.String(), rts, req.Ipv4, addr, uint32(mask))
 
 	rs, err := dbi.L3VPNRequest(context.TODO(), rq)
 	if err != nil {
@@ -67,11 +67,11 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		vpnPrefix = append(vpnPrefix, &pbapi.Prefix{
 			Address:    net.ParseIP(p.Prefix),
 			MaskLength: p.MaskLength,
+			VpnLabel:   p.VpnLabel,
+			SidLabel:   p.SidLabel,
 		})
 	}
 
 	return &pbapi.L3VPNResponse{
-		VpnLabel:  rs.VpnLabel,
-		SidLabel:  rs.SidLabel,
 		VpnPrefix: vpnPrefix}, nil
 }

@@ -22,6 +22,7 @@ type DBServices interface {
 // L3VpnReq defines data struct for L3 VPN database request
 type L3VpnReq struct {
 	RD         string
+	IPv4       bool
 	RT         []string
 	Prefix     string
 	MaskLength uint32
@@ -31,19 +32,21 @@ type L3VpnReq struct {
 type L3VPNPrefix struct {
 	Prefix     string
 	MaskLength uint32
+	VpnLabel   uint32
+	SidLabel   uint32
 	RT         []string
 }
 
 // L3VpnResp defines data struct for L3 VPN database response
 type L3VpnResp struct {
-	VpnLabel uint32
-	SidLabel uint32
-	Prefix   []L3VPNPrefix
+	Prefix []L3VPNPrefix
 }
 
 // NewL3VpnReq instantiates a L3 VPN Databse Request object
-func NewL3VpnReq(rd string, rt []string, prefix string, masklength uint32) *L3VpnReq {
-	r := L3VpnReq{}
+func NewL3VpnReq(rd string, rt []string, ipv4 bool, prefix string, masklength uint32) *L3VpnReq {
+	r := L3VpnReq{
+		IPv4: ipv4,
+	}
 	r.RD = rd
 	if len(rt) != 0 {
 		r.RT = make([]string, len(rt))

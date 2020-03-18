@@ -185,3 +185,108 @@ func TestFilterByRT(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterByIPFamily(t *testing.T) {
+	tests := []struct {
+		name    string
+		records []Record
+		// expected defines a number of record left after filtering
+		ipv4     bool
+		expected int
+	}{
+		{
+			name: "IPv4 only",
+			records: []Record{
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+			},
+			ipv4:     true,
+			expected: 3,
+		},
+		{
+			name: "IPv6 only",
+			records: []Record{
+				{
+					IPv4: false,
+				},
+				{
+					IPv4: false,
+				},
+				{
+					IPv4: false,
+				},
+			},
+			ipv4:     false,
+			expected: 3,
+		},
+		{
+			name: "IPv4 only request for IPv6",
+			records: []Record{
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+			},
+			ipv4:     false,
+			expected: 0,
+		},
+		{
+			name: "IPv6 only request for IPv4",
+			records: []Record{
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: true,
+				},
+			},
+			ipv4:     false,
+			expected: 0,
+		},
+		{
+			name: "Mix IPv4 and IPv6 request for IPv4",
+			records: []Record{
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: false,
+				},
+				{
+					IPv4: true,
+				},
+				{
+					IPv4: false,
+				},
+				{
+					IPv4: true,
+				},
+			},
+			ipv4:     true,
+			expected: 3,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := filterByIPFamily(tt.ipv4, tt.records)
+			if len(f) != tt.expected {
+				t.Errorf("expected records length %d, got %d", tt.expected, len(f))
+			}
+		})
+	}
+}

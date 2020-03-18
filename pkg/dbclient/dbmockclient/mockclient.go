@@ -27,6 +27,7 @@ type Record struct {
 	PrefixSID       uint32 `json:"PrefixSID,omitempty"`
 	VPN             uint32 `json:"VPN_Label,omitempty"`
 	RD              string `json:"RD"`
+	IPv4            bool   `json:"IPv4,omitempty"`
 	RT              string `json:"RT,omitempty"`
 	Source          string `json:"Source,omitempty"`
 	Destination     string `json:"Destination,omitempty"`
@@ -44,13 +45,15 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 	if !ok {
 		return nil, fmt.Errorf("RD %s is not found", req.RD)
 	}
-	glog.Infof("number of prefixes retrieved: %d", len(records))
 
-	// Requested RD was found, applying RT and Prefix optional constraints
+	// Filter by IP Family
+	records = filterByIPFamily(req.IPv4, records)
+
+	// Filter by Prefix
 	if req.Prefix != "" {
 		records = filterByPrefix(req.Prefix, req.MaskLength, records)
 	}
-
+	// Filter by RT
 	if len(req.RT) != 0 {
 		records = filterByRT(req.RT, records)
 	}
@@ -61,17 +64,17 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 	}
 
 	vpnPrefix := make([]dbclient.L3VPNPrefix, 0)
-
+	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
 		vpnPrefix = append(vpnPrefix, dbclient.L3VPNPrefix{
 			Prefix:     r.Prefix,
 			MaskLength: r.Mask,
+			VpnLabel:   r.VPN,
+			SidLabel:   r.PrefixSID,
 		})
 	}
 	resp := dbclient.L3VpnResp{
-		VpnLabel: records[0].VPN,
-		SidLabel: records[0].PrefixSID,
-		Prefix:   vpnPrefix,
+		Prefix: vpnPrefix,
 	}
 
 	return &resp, nil
@@ -90,6 +93,16 @@ func (m *mockSrv) Validator(addr string) error {
 	return nil
 }
 
+func filterByIPFamily(ipv4 bool, records []Record) []Record {
+	result := make([]Record, 0)
+	for _, r := range records {
+		if r.IPv4 == ipv4 {
+			result = append(result, r)
+		}
+	}
+
+	return result
+}
 func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
 	result := make([]Record, 0)
 	for _, r := range records {
@@ -99,6 +112,7 @@ func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
 		}
 
 	}
+
 	return result
 }
 
