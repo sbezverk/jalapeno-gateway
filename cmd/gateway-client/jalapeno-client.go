@@ -66,17 +66,16 @@ func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
 		if err != nil {
 			glog.Errorf("failed to marshal RD: %s with error: %+v, try again...", rd, err)
 		}
-		req := &pbapi.L3VPNRequest{Rd: mrd}
+		req := &pbapi.L3VPNRequest{Rd: mrd, Ipv4: true}
 		resp, err := gwclient.L3VPN(ctx, req)
 		if err != nil {
 			glog.Errorf("failed to request VPN label with error: %+v", err)
 			continue
 		}
-		glog.Infof("VPN Label: %d Prefix SID label: %d", resp.VpnLabel, resp.SidLabel)
 		glog.Infof("Prefixes:")
 		if resp.VpnPrefix != nil {
 			for _, p := range resp.VpnPrefix {
-				glog.Infof("- %s/%d", net.IP(p.Address).String(), p.MaskLength)
+				glog.Infof("- %s/%d VPN Label: %d Prefix SID label: %d", net.IP(p.Address).String(), p.MaskLength, p.VpnLabel, p.SidLabel)
 			}
 		}
 	}
