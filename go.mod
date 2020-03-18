@@ -9,6 +9,7 @@ require (
 	github.com/sbezverk/jalapeno-gateway/pkg/apis v0.0.0-00010101000000-000000000000 // indirect
 	github.com/sbezverk/jalapeno-gateway/pkg/bgpclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient v0.0.0-00010101000000-000000000000
+	github.com/sbezverk/jalapeno-gateway/pkg/dbclient/dbmockclient v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/gateway v0.0.0-00010101000000-000000000000
 	github.com/sbezverk/jalapeno-gateway/pkg/srvclient v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.4.0 // indirect

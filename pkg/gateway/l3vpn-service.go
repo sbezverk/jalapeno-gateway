@@ -62,7 +62,16 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		return nil, err
 	}
 
-	glog.V(5).Infof("Response from DB: %+v", *rs)
+	vpnPrefix := make([]*pbapi.Prefix, 0)
+	for _, p := range rs.Prefix {
+		vpnPrefix = append(vpnPrefix, &pbapi.Prefix{
+			Address:    net.ParseIP(p.Prefix),
+			MaskLength: p.MaskLength,
+		})
+	}
 
-	return &pbapi.L3VPNResponse{VpnLabel: rs.VpnLabel, SidLabel: rs.VpnLabel}, nil
+	return &pbapi.L3VPNResponse{
+		VpnLabel:  rs.VpnLabel,
+		SidLabel:  rs.SidLabel,
+		VpnPrefix: vpnPrefix}, nil
 }

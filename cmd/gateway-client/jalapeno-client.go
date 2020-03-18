@@ -46,19 +46,6 @@ func main() {
 	requestLoop(ctx, gwclient)
 }
 
-func getVPN(ctx context.Context, gwclient pbapi.GatewayServiceClient, req *pbapi.L3VPNRequest) (uint32, error) {
-	resp, err := gwclient.L3VPN(ctx, req)
-	if err != nil {
-		return 0, fmt.Errorf("failed to request VPN label with error: %+v", err)
-	}
-	glog.Infof("Received label: %+v", resp.Label)
-
-	if resp.VpnPrefix != nil {
-		glog.Infof("Received prefixes: %+v", resp.VpnPrefix)
-	}
-	return resp.Label, nil
-}
-
 func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -80,11 +67,18 @@ func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
 			glog.Errorf("failed to marshal RD: %s with error: %+v, try again...", rd, err)
 		}
 		req := &pbapi.L3VPNRequest{Rd: mrd}
-		label, err := getVPN(ctx, gwclient, req)
+		resp, err := gwclient.L3VPN(ctx, req)
 		if err != nil {
-			glog.Errorf("failed to receive label for  RD: %s with error: %+v, try again...", rd, err)
+			glog.Errorf("failed to request VPN label with error: %+v", err)
+			continue
 		}
-		glog.Infof("RD: %s VPN Label: %d", rd, label)
+		glog.Infof("VPN Label: %d Prefix SID label: %d", resp.VpnLabel, resp.SidLabel)
+		glog.Infof("Prefixes:")
+		if resp.VpnPrefix != nil {
+			for _, p := range resp.VpnPrefix {
+				glog.Infof("- %s/%d", net.IP(p.Address).String(), p.MaskLength)
+			}
+		}
 	}
 }
 

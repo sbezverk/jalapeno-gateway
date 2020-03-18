@@ -44,6 +44,8 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 	if !ok {
 		return nil, fmt.Errorf("RD %s is not found", req.RD)
 	}
+	glog.Infof("number of prefixes retrieved: %d", len(records))
+
 	// Requested RD was found, applying RT and Prefix optional constraints
 	if req.Prefix != "" {
 		records = filterByPrefix(req.Prefix, req.MaskLength, records)
@@ -58,9 +60,18 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 		return nil, fmt.Errorf("no matching records to found")
 	}
 
+	vpnPrefix := make([]dbclient.L3VPNPrefix, 0)
+
+	for _, r := range records {
+		vpnPrefix = append(vpnPrefix, dbclient.L3VPNPrefix{
+			Prefix:     r.Prefix,
+			MaskLength: r.Mask,
+		})
+	}
 	resp := dbclient.L3VpnResp{
 		VpnLabel: records[0].VPN,
 		SidLabel: records[0].PrefixSID,
+		Prefix:   vpnPrefix,
 	}
 
 	return &resp, nil
@@ -149,9 +160,7 @@ func NewMockDBClient(fn ...string) dbclient.DBClient {
 		if _, ok := ds.vpnStore[r.RD]; !ok {
 			ds.vpnStore[r.RD] = make([]Record, 0)
 		}
-		rds := ds.vpnStore[r.RD]
-		rds = append(rds, r)
-		ds.vpnStore[r.RD] = rds
+		ds.vpnStore[r.RD] = append(ds.vpnStore[r.RD], r)
 	}
 
 	return &ds
