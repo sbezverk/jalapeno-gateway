@@ -10,8 +10,10 @@ TESTARGS =
 endif
 BIN=./
 
-all: jalapeno-gateway jalapeno-client
+all: generate jalapeno-gateway jalapeno-client
 
+generate:
+	$(MAKE) -C ./pkg/apis
 jalapeno-gateway:
 	mkdir -p bin
 	$(MAKE) -C ./cmd/jalapeno-gateway compile-gateway
