@@ -16,17 +16,24 @@ import (
 
 // BGPClient defines the interface for communication with gobgpd process
 type BGPClient interface {
-	GetPrefix() error
-	AddPrefix() error
+	// Embeding Server interface
+	srvclient.Server
+	BGPServices
 }
 
-type bgpSrv struct {
+// BGPServices defines interface with BGP services methods
+type BGPServices interface {
+	AdvertiseVPNv4()
+	WithdrawVPNv4()
+}
+
+type bgpClient struct {
 	sync.Mutex
 	conn   *grpc.ClientConn
 	client api.GobgpApiClient
 }
 
-func (bgp *bgpSrv) Connector(addr string) error {
+func (bgp *bgpClient) Connector(addr string) error {
 	conn, err := grpc.DialContext(context.TODO(), addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -44,7 +51,7 @@ func (bgp *bgpSrv) Connector(addr string) error {
 	return nil
 }
 
-func (bgp *bgpSrv) Monitor(addr string) error {
+func (bgp *bgpClient) Monitor(addr string) error {
 	// Testing connection to gobgp by requesting its global config
 	if _, err := bgp.client.GetBgp(context.TODO(), &api.GetBgpRequest{}); err != nil {
 		return err
@@ -53,7 +60,7 @@ func (bgp *bgpSrv) Monitor(addr string) error {
 	return nil
 }
 
-func (bgp *bgpSrv) Validator(addr string) error {
+func (bgp *bgpClient) Validator(addr string) error {
 	host, port, _ := net.SplitHostPort(addr)
 	if host == "" || port == "" {
 		return fmt.Errorf("host or port cannot be ''")
@@ -77,5 +84,5 @@ func (bgp *bgpSrv) Validator(addr string) error {
 
 // NewBGPSrv returns an instance of a new bgp server process
 func NewBGPSrv() srvclient.Server {
-	return &bgpSrv{}
+	return &bgpClient{}
 }

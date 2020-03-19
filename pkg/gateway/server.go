@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -58,52 +57,6 @@ func (g *gateway) Stop() {
 	}
 }
 
-// Just for test
-func (g *gateway) accessClientInterface() {
-	dbi, ok := g.dbc.GetClientInterface().(srvclient.Server)
-	if !ok {
-		return
-	}
-	fmt.Printf("Extracted DB Client interface: %+v\n", dbi)
-	bgpi, ok := g.bgp.GetClientInterface().(srvclient.Server)
-	if !ok {
-		return
-	}
-	fmt.Printf("Extracted BGP Client interface: %+v\n", bgpi)
-}
-
-/*
-func (g *gateway) VPN(reqVPN *pbapi.RequestVPN, stream pbapi.GatewayService_VPNServer) error {
-	ctx := stream.Context()
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		client := md.Get("CLIENT_IP")
-		if len(client) != 0 {
-			glog.Infof("VPN request from client: %+v", client)
-		}
-	}
-	// Building new vpn reuqest from info recieved in grpc packet
-	vpnRequest, err := bgpclient.NewVPNRequest(reqVPN)
-	if err != nil {
-		return err
-	}
-	glog.Infof("request for Route Distinguisher: %+v", vpnRequest.RD.String())
-	repl, err := g.processVPNRequest(ctx, vpnRequest)
-	if err != nil {
-		return err
-	}
-	r, err := bgpclient.NewVPNReply(repl)
-	if err != nil {
-		return err
-	}
-	if err := stream.Send(r); err != nil {
-		return err
-	}
-
-	return nil
-}
-*/
-
 // NewGateway return an instance of Gateway interface
 func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgpc srvclient.SrvClient) Gateway {
 	gSrv := gateway{
@@ -116,42 +69,3 @@ func NewGateway(conn net.Listener, dbc srvclient.SrvClient, bgpc srvclient.SrvCl
 
 	return &gSrv
 }
-
-// processQoERequest start DB client and wait for either of 2 events, result comming back from a result channel
-// or a context timing out.
-/*
-func (g *gateway) processQoERequest(ctx context.Context, reqQoEs *pbapi.RequestQoE) (*pbapi.ResponseQoE, error) {
-	var replQoEs *pbapi.ResponseQoE
-	result := make(chan *pbapi.ResponseQoE)
-	// Requesting DB client to retrieve requested infotmation
-	go g.dbc.GetQoE(ctx, reqQoEs, result)
-	select {
-	case replQoEs = <-result:
-		return replQoEs, nil
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
-}
-
-// processQoERequest start DB client and wait for either of 2 events, result comming back from a result channel
-// or a context timing out.
-func (g *gateway) processVPNRequest(ctx context.Context, req *bgpclient.VPNRequest) (*bgpclient.VPNReply, error) {
-	glog.V(5).Infof("processing VPN Request for RD: %+v RT: %+v", req.RD.String(), req.RT)
-	var repl *bgpclient.VPNReply
-	result := make(chan *bgpclient.VPNReply)
-	// Requesting DB client to retrieve requested infotmation
-	go g.dbc.GetVPN(ctx, req, result)
-	select {
-	case repl = <-result:
-		if repl != nil && repl.RD != nil {
-			glog.V(5).Infof("DB client returned RD: %+v RT: %+v Label: %d", repl.RD.String(), repl.RT, repl.Label)
-		} else {
-			glog.V(5).Infof("DB client returned nil")
-		}
-		return repl, nil
-	case <-ctx.Done():
-		glog.V(5).Infof("DB client returned error: %+v ", ctx.Err())
-		return nil, ctx.Err()
-	}
-}
-*/
