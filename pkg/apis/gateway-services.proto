@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
 
 package apis;
 
@@ -58,11 +59,17 @@ message Prefix {
   uint32 vpn_label = 3;
   // sid label is an identifier used for a provider edge router identification
   uint32 sid_label = 4;
+  // Route Distinguisher must be one of
+  // RouteDistinguisherTwoOctetAS,
+  // RouteDistinguisherIPAddressAS,
+  // or RouteDistinguisherFourOctetAS.
+  // Mandatory parameter
+  google.protobuf.Any rd = 5;
   // List of the a specific prefix's Route Targets. Each must be one of
   // TwoOctetAsSpecificExtended,
   // IPv4AddressSpecificExtended,
   // or FourOctetAsSpecificExtended.
-  repeated google.protobuf.Any rt = 5;
+  repeated google.protobuf.Any rt = 6;
 }
 // RequestVPN call used to request L3 VPN entries, identified by one Route
 // Distinguisher which can be one of listed below types, and one or more Route
@@ -94,11 +101,19 @@ message L3VPNResponse {
   bool ipv4 = 1;
   repeated Prefix vpn_prefix = 2;
 }
-
+// VPNv4Prefix defines a collection of VPNv4 prefixes, used in AdvBGPVPNv4 to
+// advertise VPNv4 prefixes and in WdBGPVPNv4 to withdraw them.
+message VPNv4Prefix { repeated Prefix prefix = 1; }
 // GatewayService lists rpc services supported by the gateway api
 service GatewayService {
   // API to request L3 VPN label and list of prefixes for VRF specified by RD.
   // Optionally RT and/or Prefix can be specified as additional selection
   // creterias.
   rpc L3VPN(L3VPNRequest) returns (L3VPNResponse);
+  // API to advertise VPNv4 Prefix(s), no response other than Success or Failure
+  // is generated
+  rpc AdvBGPVPNv4(VPNv4Prefix) returns (google.protobuf.Empty);
+  // API to withdraw VPNv4 Prefix(s), no response other than Success or Failure
+  // is generated
+  rpc WdBGPVPNv4(VPNv4Prefix) returns (google.protobuf.Empty);
 }
