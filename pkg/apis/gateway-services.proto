@@ -59,17 +59,21 @@ message Prefix {
   uint32 vpn_label = 3;
   // sid label is an identifier used for a provider edge router identification
   uint32 sid_label = 4;
+  // Source Autonomous System Number
+  uint32 asn = 5;
+  // Next hop address
+  bytes nh_address = 6;
   // Route Distinguisher must be one of
   // RouteDistinguisherTwoOctetAS,
   // RouteDistinguisherIPAddressAS,
   // or RouteDistinguisherFourOctetAS.
   // Mandatory parameter
-  google.protobuf.Any rd = 5;
+  google.protobuf.Any rd = 7;
   // List of the a specific prefix's Route Targets. Each must be one of
   // TwoOctetAsSpecificExtended,
   // IPv4AddressSpecificExtended,
   // or FourOctetAsSpecificExtended.
-  repeated google.protobuf.Any rt = 6;
+  repeated google.protobuf.Any rt = 8;
 }
 // RequestVPN call used to request L3 VPN entries, identified by one Route
 // Distinguisher which can be one of listed below types, and one or more Route

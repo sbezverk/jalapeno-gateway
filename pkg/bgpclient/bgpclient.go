@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	api "github.com/osrg/gobgp/api"
-	"google.golang.org/grpc"
-
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
+	"google.golang.org/grpc"
 )
 
 // BGPClient defines the interface for communication with gobgpd process
@@ -23,8 +23,8 @@ type BGPClient interface {
 
 // BGPServices defines interface with BGP services methods
 type BGPServices interface {
-	AdvertiseVPNv4()
-	WithdrawVPNv4()
+	AdvertiseVPNv4([]*pbapi.Prefix) error
+	WithdrawVPNv4([]*pbapi.Prefix) error
 }
 
 type bgpClient struct {

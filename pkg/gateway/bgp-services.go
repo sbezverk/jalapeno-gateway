@@ -24,7 +24,9 @@ func (g *gateway) AdvBGPVPNv4(ctx context.Context, req *pbapi.VPNv4Prefix) (*emp
 	if !ok {
 		return nil, fmt.Errorf("request failed, Database service is not available")
 	}
-	bgp.AdvertiseVPNv4()
+	if err := bgp.AdvertiseVPNv4(req.Prefix); err != nil {
+		return &empty.Empty{}, err
+	}
 
 	return &empty.Empty{}, nil
 }
@@ -42,7 +44,9 @@ func (g *gateway) WdBGPVPNv4(ctx context.Context, req *pbapi.VPNv4Prefix) (*empt
 	if !ok {
 		return nil, fmt.Errorf("request failed, Database service is not available")
 	}
-	bgp.WithdrawVPNv4()
+	if err := bgp.WithdrawVPNv4(req.Prefix); err != nil {
+		return &empty.Empty{}, err
+	}
 
 	return &empty.Empty{}, nil
 }
