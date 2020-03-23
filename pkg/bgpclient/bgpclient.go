@@ -23,8 +23,8 @@ type BGPClient interface {
 
 // BGPServices defines interface with BGP services methods
 type BGPServices interface {
-	AdvertiseVPNv4([]*pbapi.Prefix) error
-	WithdrawVPNv4([]*pbapi.Prefix) error
+	AdvertiseVPNv4([]*pbapi.VPNPrefix) error
+	WithdrawVPNv4([]*pbapi.VPNPrefix) error
 }
 
 type bgpClient struct {

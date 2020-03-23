@@ -12,7 +12,7 @@ import (
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 )
 
-func (bgp *bgpClient) AdvertiseVPNv4(prefix []*pbapi.Prefix) error {
+func (bgp *bgpClient) AdvertiseVPNv4(prefix []*pbapi.VPNPrefix) error {
 	if err := validateVPNv4Prefix(prefix); err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func (bgp *bgpClient) AdvertiseVPNv4(prefix []*pbapi.Prefix) error {
 	return nil
 }
 
-func (bgp *bgpClient) WithdrawVPNv4(prefix []*pbapi.Prefix) error {
+func (bgp *bgpClient) WithdrawVPNv4(prefix []*pbapi.VPNPrefix) error {
 	if err := validateVPNv4Prefix(prefix); err != nil {
 		return err
 	}
@@ -33,19 +33,19 @@ func (bgp *bgpClient) WithdrawVPNv4(prefix []*pbapi.Prefix) error {
 	return nil
 }
 
-func validateVPNv4Prefix(prefix []*pbapi.Prefix) error {
+func validateVPNv4Prefix(prefix []*pbapi.VPNPrefix) error {
 	for _, p := range prefix {
 		if p == nil {
 			continue
 		}
 		glog.Infof("vpnv4 prefix: %+v", *p)
 		// Validating IP address
-		if net.IP(p.Address).To4() == nil {
-			return fmt.Errorf("invalid ipv4 address %+v", p.Address)
+		if net.IP(p.Prefix.Address).To4() == nil {
+			return fmt.Errorf("invalid ipv4 address %+v", p.Prefix.Address)
 		}
 		// Validating Mask
-		if p.MaskLength <= 0 || p.MaskLength > 32 {
-			return fmt.Errorf("invalid mask length %d", p.MaskLength)
+		if p.Prefix.MaskLength <= 0 || p.Prefix.MaskLength > 32 {
+			return fmt.Errorf("invalid mask length %d", p.Prefix.MaskLength)
 		}
 		// Validating vpn Label that it is not excedding 2^20
 		if p.VpnLabel <= 0 || p.VpnLabel > 1048576 {
@@ -59,12 +59,12 @@ func validateVPNv4Prefix(prefix []*pbapi.Prefix) error {
 	return nil
 }
 
-func (bgp *bgpClient) advertiseVPNv4Prefix(ctx context.Context, prefix *pbapi.Prefix) error {
+func (bgp *bgpClient) advertiseVPNv4Prefix(ctx context.Context, prefix *pbapi.VPNPrefix) error {
 	nlrivpn, _ := ptypes.MarshalAny(&api.LabeledVPNIPAddressPrefix{
 		Labels:    []uint32{prefix.VpnLabel},
 		Rd:        prefix.Rd,
-		PrefixLen: prefix.MaskLength,
-		Prefix:    net.IP(prefix.Address).To4().String(),
+		PrefixLen: prefix.Prefix.MaskLength,
+		Prefix:    net.IP(prefix.Prefix.Address).To4().String(),
 	})
 
 	a1, _ := ptypes.MarshalAny(&api.OriginAttribute{

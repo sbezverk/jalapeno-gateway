@@ -62,13 +62,15 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		return nil, err
 	}
 
-	vpnPrefix := make([]*pbapi.Prefix, 0)
+	vpnPrefix := make([]*pbapi.VPNPrefix, 0)
 	for _, p := range rs.Prefix {
-		vpnPrefix = append(vpnPrefix, &pbapi.Prefix{
-			Address:    net.ParseIP(p.Prefix),
-			MaskLength: p.MaskLength,
-			VpnLabel:   p.VpnLabel,
-			SidLabel:   p.SidLabel,
+		vpnPrefix = append(vpnPrefix, &pbapi.VPNPrefix{
+			Prefix: &pbapi.Prefix{
+				Address:    net.ParseIP(p.Prefix),
+				MaskLength: p.MaskLength,
+			},
+			VpnLabel: p.VpnLabel,
+			SidLabel: p.SidLabel,
 		})
 	}
 

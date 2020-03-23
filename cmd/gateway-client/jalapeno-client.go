@@ -50,6 +50,10 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 			validator: ipValidator,
 		},
 		{
+			prompt:    "IPv4 address for the VPNv4 next hop ",
+			validator: ipValidator,
+		},
+		{
 			prompt:    "Autonomous System Number ",
 			validator: asnValidator,
 		},
@@ -60,6 +64,14 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 		{
 			prompt:    "RT for the application address ",
 			validator: rtValidator,
+		},
+		{
+			prompt:    "VPN Label ",
+			validator: labelValidator,
+		},
+		{
+			prompt:    "Unicast Label ",
+			validator: labelValidator,
 		},
 	}
 	for {
@@ -76,30 +88,36 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.New(map[string]string{
 		"CLIENT_IP": net.ParseIP("57.57.57.7").String(),
 	}))
-	// Step one prepare the application IP
+	// Prepare the application IP
 	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
-	// Step two get ASN
-	asn, _ := strconv.Atoi(p[1].input)
-	// Step three get and marshal RD
-	rd, _ := marshalRD(p[2].input)
-	// Step four get and marshal RT
-	rt, _ := marshalRT(p[3].input)
+	// Prepare the next hop address
+	nhprefix, _, _ := getPrefixAndMask(p[1].input)
+	// Get ASN
+	asn, _ := strconv.Atoi(p[2].input)
+	// Get and marshal RD
+	rd, _ := marshalRD(p[3].input)
+	// Get and marshal RT
+	rt, _ := marshalRT(p[4].input)
+	// Get VPN label
+	vpnLabel, _ := getLabel(p[5].input)
+	// Get Unicast label
+	// ucastLabel, _ := getLabel(p[6].input)
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
 	if err != nil {
-		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[2].input, err)
+		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[3].input, err)
 	}
-	fmt.Printf("\nVPN Prefixes for RD: %s\n", p[2].input)
+	fmt.Printf("\nVPN Prefixes for RD: %s\n", p[3].input)
 	for _, p := range prefixes {
-		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Address).String(), p.MaskLength, p.VpnLabel, p.SidLabel)
+		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Prefix.Address).String(), p.Prefix.MaskLength, p.VpnLabel, p.SidLabel)
 	}
-	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, asn, rd, rt); err != nil {
+	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, nhprefix, asn, rd, rt, vpnLabel); err != nil {
 		return fmt.Errorf("failed to program application's ip as vpn prefix in VRF RD: %s with error: %+v", p[2].input, err)
 	}
 
 	return nil
 }
 
-func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.Prefix, error) {
+func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.VPNPrefix, error) {
 	req := &pbapi.L3VPNRequest{Rd: rd, Ipv4: true}
 	resp, err := gwclient.L3VPN(ctx, req)
 	if err != nil {
@@ -109,16 +127,33 @@ func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, 
 	return resp.VpnPrefix, nil
 }
 
-func advertiseVpnPrefix(ctx context.Context, gwclient pbapi.GatewayServiceClient, prefix []byte, mask int, asn int, rd *any.Any, rt *any.Any) error {
+func advertiseVpnPrefix(ctx context.Context,
+	gwclient pbapi.GatewayServiceClient,
+	// VPN prefix
+	prefix []byte,
+	// VPN Prefix mask
+	mask int,
+	// VPN Prefix's Next hop address
+	nhPrefix []byte,
+	// Autonomous Systen Number
+	asn int,
+	// VPN Prefix's Route Distinguisher
+	rd *any.Any,
+	// VPN Prefix's Route Targets
+	rt *any.Any,
+	// VPN Prefix's VPN label
+	vpnLabel int) error {
 	req := &pbapi.VPNv4Prefix{
-		Prefix: []*pbapi.Prefix{
+		Prefix: []*pbapi.VPNPrefix{
 			{
-				Address:    prefix,
-				MaskLength: uint32(mask),
-				VpnLabel:   212121,
-				NhAddress:  []byte{6, 6, 6, 6},
-				Asn:        uint32(asn),
-				Rd:         rd,
+				Prefix: &pbapi.Prefix{
+					Address:    prefix,
+					MaskLength: uint32(mask),
+				},
+				VpnLabel:  uint32(vpnLabel),
+				NhAddress: nhPrefix,
+				Asn:       uint32(asn),
+				Rd:        rd,
 				Rt: []*any.Any{
 					rt,
 				},
@@ -218,6 +253,7 @@ func marshalRT(rt string) (*any.Any, error) {
 		// If parts[0] is less than MaxUint16, then it is 2 Bytes ASN: 4 Bytes Value
 		return bgpclient.MarshalRT(bgp.NewTwoOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint16(n1), uint32(n2), true)), nil
 	}
+
 	// Since no match before then, it is 4 Bytes ASN: 2 Bytes Value
 	return bgpclient.MarshalRT(bgp.NewFourOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint32(n1), uint16(n2), true)), nil
 }
@@ -255,6 +291,7 @@ func rdValidator(p parameter) error {
 	if err := bgpclient.RDValidator(p.input); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -262,5 +299,32 @@ func rtValidator(p parameter) error {
 	if err := bgpclient.RTValidator(p.input); err != nil {
 		return err
 	}
+
 	return nil
+}
+
+func labelValidator(p parameter) error {
+	label, err := strconv.Atoi(p.input)
+	if err != nil {
+		return err
+	}
+	// Validating vpn Label that it is not excedding 2^20
+	if label <= 0 || label > 1048576 {
+		return fmt.Errorf("invalid vpn label %d", label)
+	}
+
+	return nil
+}
+
+func getLabel(s string) (int, error) {
+	label, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	// Validating vpn Label that it is not excedding 2^20
+	if label <= 0 || label > 1048576 {
+		return 0, fmt.Errorf("invalid vpn label %d", label)
+	}
+
+	return label, nil
 }
