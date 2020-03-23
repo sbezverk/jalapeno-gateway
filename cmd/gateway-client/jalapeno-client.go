@@ -43,26 +43,13 @@ func main() {
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.New(map[string]string{
 		"CLIENT_IP": net.ParseIP("57.57.57.7").String(),
 	}))
-	// requestLoop(ctx, gwclient)
+
 	mainLoop(ctx, gwclient)
 }
 
 func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
-	reader := bufio.NewReader(os.Stdin)
+	rd := "111:111"
 	for {
-		fmt.Printf("Enter RD in a form of '2 Bytes ASN:4 Bytes Value', '4 Bytes ASN:2 Bytes Value' or '2 Bytes ASN:4 Bytes Value', 'q' to exit\n")
-		rd, err := reader.ReadString('\n')
-		if err != nil {
-			glog.Errorf("failed to read input with error: %+v, try again...", err)
-		}
-		rd = strings.Replace(rd, "\n", "", -1)
-		if strings.ToLower(rd) == "q" {
-			glog.Infof("all done, exiting the loop..")
-			return
-		}
-		if err := validateRD(rd); err != nil {
-			glog.Errorf("failed to parse entered RD: %s with error: %+v, try again...", rd, err)
-		}
 		mrd, err := marshalRD(rd)
 		if err != nil {
 			glog.Errorf("failed to marshal RD: %s with error: %+v, try again...", rd, err)
@@ -83,7 +70,7 @@ func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
 }
 
 func marshalRD(rd string) (*any.Any, error) {
-	if err := validateRD(rd); err != nil {
+	if err := bgpclient.RDValidator(rd); err != nil {
 		return nil, err
 	}
 	// Sice passed RD got already validated, it is safe to ignore any error processing
@@ -103,48 +90,25 @@ func marshalRD(rd string) (*any.Any, error) {
 	return bgpclient.MarshalRD(bgp.NewRouteDistinguisherFourOctetAS(uint32(n1), uint16(n2))), nil
 }
 
-func validateRD(rd string) error {
-	parts := strings.Split(rd, ":")
-	if len(parts) != 2 {
-		return fmt.Errorf("malformed RD, expected 2 fields separated by ':'")
+func marshalRT(rt string) (*any.Any, error) {
+	if err := bgpclient.RTValidator(rt); err != nil {
+		return nil, err
 	}
-	part1 := strings.Trim(parts[0], " ")
-	part2 := strings.Trim(parts[1], " ")
-
-	if net.ParseIP(part1).To4() != nil {
-		// Possible RD in format IP:Value, Value cannot exceed uint16 value.
-		n, err := strconv.Atoi(part2)
-		if err != nil {
-			return fmt.Errorf("malformed RD, failed to parse Value field %s with error: %+v", part2, err)
-		}
-		if n > math.MaxUint16 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n, math.MaxUint16)
-		}
-		return nil
+	// Sice passed RD got already validated, it is safe to ignore any error processing
+	parts := strings.Split(rt, ":")
+	if net.ParseIP(parts[0]).To4() != nil {
+		// If parts[0] is a valid IP, then it is IP:Value
+		n, _ := strconv.Atoi(parts[1])
+		return bgpclient.MarshalRT(bgp.NewIPv4AddressSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, parts[0], uint16(n), true)), nil
 	}
-	n1, err := strconv.Atoi(part1)
-	if err != nil {
-		return fmt.Errorf("malformed RD, failed to parse ASN field %s with error: %+v", part1, err)
+	n1, _ := strconv.Atoi(parts[0])
+	n2, _ := strconv.Atoi(parts[1])
+	if n1 < math.MaxUint16 {
+		// If parts[0] is less than MaxUint16, then it is 2 Bytes ASN: 4 Bytes Value
+		return bgpclient.MarshalRT(bgp.NewTwoOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint16(n1), uint32(n2), true)), nil
 	}
-	n2, err := strconv.Atoi(part2)
-	if err != nil {
-		return fmt.Errorf("malformed RD, failed to parse Value field %s with error: %+v", part2, err)
-	}
-	// Check for ASN 4 bytes and Value 2 bytes
-	if n1 > math.MaxUint16 && n1 <= math.MaxUint32 {
-		if n2 > math.MaxUint16 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n2, math.MaxUint16)
-		}
-		return nil
-	}
-	// Check for ASN 2 bytes and Value 4 bytes
-	if n1 <= math.MaxUint16 {
-		if n2 > math.MaxUint32 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n2, math.MaxUint32)
-		}
-		return nil
-	}
-	return fmt.Errorf("malformed RD, ASN field %d exceeds maximum allowable %d", n1, math.MaxUint32)
+	// Since no match before then, it is 4 Bytes ASN: 2 Bytes Value
+	return bgpclient.MarshalRT(bgp.NewFourOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint32(n1), uint16(n2), true)), nil
 }
 
 type parameter struct {
@@ -177,91 +141,17 @@ func asnValidator(p parameter) error {
 }
 
 func rdValidator(p parameter) error {
-	parts := strings.Split(p.input, ":")
-	if len(parts) != 2 {
-		return fmt.Errorf("malformed RD, expected 2 fields separated by ':'")
+	if err := bgpclient.RDValidator(p.input); err != nil {
+		return err
 	}
-	part1 := strings.Trim(parts[0], " ")
-	part2 := strings.Trim(parts[1], " ")
-
-	if net.ParseIP(part1).To4() != nil {
-		// Possible RD in format IP:Value, Value cannot exceed uint16 value.
-		n, err := strconv.Atoi(part2)
-		if err != nil {
-			return fmt.Errorf("malformed RD, failed to parse Value field %s with error: %+v", part2, err)
-		}
-		if n > math.MaxUint16 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n, math.MaxUint16)
-		}
-		return nil
-	}
-	n1, err := strconv.Atoi(part1)
-	if err != nil {
-		return fmt.Errorf("malformed RD, failed to parse ASN field %s with error: %+v", part1, err)
-	}
-	n2, err := strconv.Atoi(part2)
-	if err != nil {
-		return fmt.Errorf("malformed RD, failed to parse Value field %s with error: %+v", part2, err)
-	}
-	// Check for ASN 4 bytes and Value 2 bytes
-	if n1 > math.MaxUint16 && n1 <= math.MaxUint32 {
-		if n2 > math.MaxUint16 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n2, math.MaxUint16)
-		}
-		return nil
-	}
-	// Check for ASN 2 bytes and Value 4 bytes
-	if n1 <= math.MaxUint16 {
-		if n2 > math.MaxUint32 {
-			return fmt.Errorf("malformed RD, Value field %d exceeds maximum allowable %d", n2, math.MaxUint32)
-		}
-		return nil
-	}
-	return fmt.Errorf("malformed RD, ASN field %d exceeds maximum allowable %d", n1, math.MaxUint32)
+	return nil
 }
 
 func rtValidator(p parameter) error {
-	parts := strings.Split(p.input, ":")
-	if len(parts) != 2 {
-		return fmt.Errorf("malformed RT, expected 2 fields separated by ':'")
+	if err := bgpclient.RTValidator(p.input); err != nil {
+		return err
 	}
-	part1 := strings.Trim(parts[0], " ")
-	part2 := strings.Trim(parts[1], " ")
-
-	if net.ParseIP(part1).To4() != nil {
-		// Possible RD in format IP:Value, Value cannot exceed uint16 value.
-		n, err := strconv.Atoi(part2)
-		if err != nil {
-			return fmt.Errorf("malformed RT, failed to parse Value field %s with error: %+v", part2, err)
-		}
-		if n > math.MaxUint16 {
-			return fmt.Errorf("malformed RT, Value field %d exceeds maximum allowable %d", n, math.MaxUint16)
-		}
-		return nil
-	}
-	n1, err := strconv.Atoi(part1)
-	if err != nil {
-		return fmt.Errorf("malformed RT, failed to parse ASN field %s with error: %+v", part1, err)
-	}
-	n2, err := strconv.Atoi(part2)
-	if err != nil {
-		return fmt.Errorf("malformed RT, failed to parse Value field %s with error: %+v", part2, err)
-	}
-	// Check for ASN 4 bytes and Value 2 bytes
-	if n1 > math.MaxUint16 && n1 <= math.MaxUint32 {
-		if n2 > math.MaxUint16 {
-			return fmt.Errorf("malformed RT, Value field %d exceeds maximum allowable %d", n2, math.MaxUint16)
-		}
-		return nil
-	}
-	// Check for ASN 2 bytes and Value 4 bytes
-	if n1 <= math.MaxUint16 {
-		if n2 > math.MaxUint32 {
-			return fmt.Errorf("malformed RT, Value field %d exceeds maximum allowable %d", n2, math.MaxUint32)
-		}
-		return nil
-	}
-	return fmt.Errorf("malformed RT, ASN field %d exceeds maximum allowable %d", n1, math.MaxUint32)
+	return nil
 }
 
 func mainLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
