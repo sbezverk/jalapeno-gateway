@@ -80,7 +80,7 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 			fmt.Printf("\nrequest failed with error: %+v\n\n\n", err)
 			continue
 		}
-		fmt.Printf("\nSuccessfully advertised prefix %s in VRF RD: %s\n\n\n", parameters[0].input, parameters[2].input)
+		fmt.Printf("\nSuccessfully advertised prefix %s in VRF RD: %s\n\n\n", parameters[0].input, parameters[3].input)
 	}
 }
 
@@ -91,7 +91,7 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	// Prepare the application IP
 	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
 	// Prepare the next hop address
-	nhprefix, _, _ := getPrefixAndMask(p[1].input)
+	nhPrefix, nhMask, _ := getPrefixAndMask(p[1].input)
 	// Get ASN
 	asn, _ := strconv.Atoi(p[2].input)
 	// Get and marshal RD
@@ -101,7 +101,7 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	// Get VPN label
 	vpnLabel, _ := getLabel(p[5].input)
 	// Get Unicast label
-	// ucastLabel, _ := getLabel(p[6].input)
+	ucastLabel, _ := getLabel(p[6].input)
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
 	if err != nil {
 		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[3].input, err)
@@ -110,10 +110,13 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	for _, p := range prefixes {
 		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Prefix.Address).String(), p.Prefix.MaskLength, p.VpnLabel, p.SidLabel)
 	}
-	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, nhprefix, asn, rd, rt, vpnLabel); err != nil {
-		return fmt.Errorf("failed to program application's ip as vpn prefix in VRF RD: %s with error: %+v", p[2].input, err)
+	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, nhPrefix, asn, rd, rt, vpnLabel); err != nil {
+		return fmt.Errorf("failed to program application's ip as vpn prefix in VRF RD: %s with error: %+v", p[3].input, err)
 	}
 
+	if err := advertiseLUPrefix(ctx, gwclient, nhPrefix, nhMask, ucastLabel); err != nil {
+		return fmt.Errorf("failed to program labeled unicast prefix with error: %+v", err)
+	}
 	return nil
 }
 
@@ -162,6 +165,31 @@ func advertiseVpnPrefix(ctx context.Context,
 	}
 	// Sending request to program VPNv4 Prefix
 	_, err := gwclient.AdvBGPVPNv4(ctx, req)
+
+	return err
+}
+
+func advertiseLUPrefix(ctx context.Context,
+	gwclient pbapi.GatewayServiceClient,
+	// LU prefix
+	prefix []byte,
+	// LU Prefix's mask
+	mask int,
+	// Unicast Label
+	ucastLabel int) error {
+	req := &pbapi.LabeledUnicastPrefix{
+		Prefix: []*pbapi.LUPrefix{
+			{
+				Prefix: &pbapi.Prefix{
+					Address:    prefix,
+					MaskLength: uint32(mask),
+				},
+				UcastLabel: uint32(ucastLabel),
+			},
+		},
+	}
+	// Sending request to program VPNv4 Prefix
+	_, err := gwclient.AdvLUPrefix(ctx, req)
 
 	return err
 }

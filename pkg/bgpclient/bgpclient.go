@@ -25,6 +25,8 @@ type BGPClient interface {
 type BGPServices interface {
 	AdvertiseVPNv4([]*pbapi.VPNPrefix) error
 	WithdrawVPNv4([]*pbapi.VPNPrefix) error
+	AdvertiseLUPrefix([]*pbapi.LUPrefix) error
+	WithdrawLUPrefix([]*pbapi.LUPrefix) error
 }
 
 type bgpClient struct {

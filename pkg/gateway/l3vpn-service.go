@@ -23,7 +23,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 	// Check if Database interface is available, if not then there is no reason to do any processing
 	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
 	if !ok {
-		return nil, fmt.Errorf("request failed, Database service is not available")
+		return nil, fmt.Errorf("request failed, BGP service is not available")
 	}
 	// Check if RD is present in the request, if not return error as RD is a mandatory parameter
 	if req.Rd == nil {
