@@ -65,8 +65,10 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 	for {
 		getInput(parameters, 0)
 		if err := processRequest(gwclient, parameters); err != nil {
-			fmt.Printf("request failed with error: %+v", err)
+			fmt.Printf("\nrequest failed with error: %+v\n\n\n", err)
+			continue
 		}
+		fmt.Printf("\nSuccessfully advertised prefix %s in VRF RD: %s\n\n\n", parameters[0].input, parameters[2].input)
 	}
 }
 
@@ -75,13 +77,13 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 		"CLIENT_IP": net.ParseIP("57.57.57.7").String(),
 	}))
 	// Step one prepare the application IP
-	//	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
+	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
 	// Step two get ASN
-	//	asn, _ := strconv.Atoi(p[1].input)
+	asn, _ := strconv.Atoi(p[1].input)
 	// Step three get and marshal RD
 	rd, _ := marshalRD(p[2].input)
 	// Step four get and marshal RT
-	//	rt, _ := marshalRD(p[3].input)
+	rt, _ := marshalRT(p[3].input)
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
 	if err != nil {
 		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[2].input, err)
@@ -89,6 +91,9 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	fmt.Printf("\nVPN Prefixes for RD: %s\n", p[2].input)
 	for _, p := range prefixes {
 		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Address).String(), p.MaskLength, p.VpnLabel, p.SidLabel)
+	}
+	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, asn, rd, rt); err != nil {
+		return fmt.Errorf("failed to program application's ip as vpn prefix in VRF RD: %s with error: %+v", p[2].input, err)
 	}
 
 	return nil
@@ -102,6 +107,28 @@ func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, 
 	}
 
 	return resp.VpnPrefix, nil
+}
+
+func advertiseVpnPrefix(ctx context.Context, gwclient pbapi.GatewayServiceClient, prefix []byte, mask int, asn int, rd *any.Any, rt *any.Any) error {
+	req := &pbapi.VPNv4Prefix{
+		Prefix: []*pbapi.Prefix{
+			{
+				Address:    prefix,
+				MaskLength: uint32(mask),
+				VpnLabel:   212121,
+				NhAddress:  []byte{6, 6, 6, 6},
+				Asn:        uint32(asn),
+				Rd:         rd,
+				Rt: []*any.Any{
+					rt,
+				},
+			},
+		},
+	}
+	// Sending request to program VPNv4 Prefix
+	_, err := gwclient.AdvBGPVPNv4(ctx, req)
+
+	return err
 }
 
 func getPrefixAndMask(addr string) ([]byte, int, error) {

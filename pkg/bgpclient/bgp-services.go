@@ -16,6 +16,11 @@ func (bgp *bgpClient) AdvertiseVPNv4(prefix []*pbapi.Prefix) error {
 	if err := validateVPNv4Prefix(prefix); err != nil {
 		return err
 	}
+	for _, p := range prefix {
+		if err := bgp.advertiseVPNv4Prefix(context.TODO(), p); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -49,7 +54,6 @@ func validateVPNv4Prefix(prefix []*pbapi.Prefix) error {
 		if net.IP(p.NhAddress).To4() == nil {
 			return fmt.Errorf("invalid next hop address %+v", p.NhAddress)
 		}
-		// TODO, consider validating RD and RTs
 	}
 
 	return nil
@@ -69,9 +73,9 @@ func (bgp *bgpClient) advertiseVPNv4Prefix(ctx context.Context, prefix *pbapi.Pr
 	a2, _ := ptypes.MarshalAny(&api.NextHopAttribute{
 		NextHop: net.IP(prefix.NhAddress).To4().String(),
 	})
-	a3, _ := ptypes.MarshalAny(&api.ExtendedCommunitiesAttribute{
-		Communities: prefix.Rt,
-	})
+	communities := &api.ExtendedCommunitiesAttribute{}
+	communities.Communities = append(communities.Communities, prefix.Rt...)
+	a3, _ := ptypes.MarshalAny(communities)
 
 	attrs := []*any.Any{a1, a2, a3}
 	_, err := bgp.client.AddPath(ctx, &api.AddPathRequest{
