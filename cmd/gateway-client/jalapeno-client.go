@@ -40,30 +40,114 @@ func main() {
 	defer conn.Close()
 	gwclient := pbapi.NewGatewayServiceClient(conn)
 
+	mainLoop(gwclient)
+}
+
+func mainLoop(gwclient pbapi.GatewayServiceClient) {
+	parameters := []parameter{
+		{
+			prompt:    "IPv4 address used by the application ",
+			validator: ipValidator,
+		},
+		{
+			prompt:    "Autonomous System Number ",
+			validator: asnValidator,
+		},
+		{
+			prompt:    "RD for the application VRF ",
+			validator: rdValidator,
+		},
+		{
+			prompt:    "RT for the application address ",
+			validator: rtValidator,
+		},
+	}
+	for {
+		getInput(parameters, 0)
+		if err := processRequest(gwclient, parameters); err != nil {
+			fmt.Printf("request failed with error: %+v", err)
+		}
+	}
+}
+
+func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.New(map[string]string{
 		"CLIENT_IP": net.ParseIP("57.57.57.7").String(),
 	}))
+	// Step one prepare the application IP
+	//	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
+	// Step two get ASN
+	//	asn, _ := strconv.Atoi(p[1].input)
+	// Step three get and marshal RD
+	rd, _ := marshalRD(p[2].input)
+	// Step four get and marshal RT
+	//	rt, _ := marshalRD(p[3].input)
+	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
+	if err != nil {
+		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[2].input, err)
+	}
+	fmt.Printf("\nVPN Prefixes for RD: %s\n", p[2].input)
+	for _, p := range prefixes {
+		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Address).String(), p.MaskLength, p.VpnLabel, p.SidLabel)
+	}
 
-	mainLoop(ctx, gwclient)
+	return nil
 }
 
-func requestLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
-	rd := "111:111"
+func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.Prefix, error) {
+	req := &pbapi.L3VPNRequest{Rd: rd, Ipv4: true}
+	resp, err := gwclient.L3VPN(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.VpnPrefix, nil
+}
+
+func getPrefixAndMask(addr string) ([]byte, int, error) {
+	if _, pr, err := net.ParseCIDR(addr); err == nil {
+		l, _ := pr.Mask.Size()
+		return pr.IP, l, nil
+	}
+	if pr := net.ParseIP(addr); pr != nil {
+		return pr, 32, nil
+	}
+
+	return nil, 0, fmt.Errorf("invalid address %s", addr)
+}
+
+func getInput(p []parameter, index int) int {
+	reader := bufio.NewReader(os.Stdin)
+	i := index
 	for {
-		mrd, err := marshalRD(rd)
-		if err != nil {
-			glog.Errorf("failed to marshal RD: %s with error: %+v, try again...", rd, err)
+		if i >= len(p) {
+			return i
 		}
-		req := &pbapi.L3VPNRequest{Rd: mrd, Ipv4: true}
-		resp, err := gwclient.L3VPN(ctx, req)
+		fmt.Printf("Enter %s, 'b' to return to the previous parameter or 'q' to exit\n", p[i].prompt)
+		input, err := reader.ReadString('\n')
 		if err != nil {
-			glog.Errorf("failed to request VPN label with error: %+v", err)
+			fmt.Printf("failed to read input with error: %+v, try again...", err)
 			continue
 		}
-		glog.Infof("Prefixes:")
-		if resp.VpnPrefix != nil {
-			for _, p := range resp.VpnPrefix {
-				glog.Infof("- %s/%d VPN Label: %d Prefix SID label: %d", net.IP(p.Address).String(), p.MaskLength, p.VpnLabel, p.SidLabel)
+		input = strings.Replace(input, "\n", "", -1)
+		switch strings.ToLower(input) {
+		case "q":
+			os.Exit(0)
+		case "b":
+			if i == 0 {
+				continue
+			}
+			return i - 1
+		default:
+			p[i].input = input
+			if err := p[i].validator(p[i]); err != nil {
+				fmt.Printf("Validation failed with error: %+v, try again...\n", err)
+				continue
+			}
+			if i+1 < len(p) {
+				i = getInput(p, i+1)
+			} else {
+				return i + 1
 			}
 		}
 	}
@@ -152,66 +236,4 @@ func rtValidator(p parameter) error {
 		return err
 	}
 	return nil
-}
-
-func mainLoop(ctx context.Context, gwclient pbapi.GatewayServiceClient) {
-	parameters := []parameter{
-		{
-			prompt:    "IPv4 address used by the application ",
-			validator: ipValidator,
-		},
-		{
-			prompt:    "Autonomous System Number ",
-			validator: asnValidator,
-		},
-		{
-			prompt:    "RD for the application VRF ",
-			validator: rdValidator,
-		},
-		{
-			prompt:    "RT for the application address ",
-			validator: rtValidator,
-		},
-	}
-	for {
-		getInput(parameters, 0)
-		fmt.Printf("Acting on parameters: %+v\n", parameters)
-	}
-}
-
-func getInput(p []parameter, index int) int {
-	reader := bufio.NewReader(os.Stdin)
-	i := index
-	for {
-		if i >= len(p) {
-			return i
-		}
-		fmt.Printf("Enter %s, 'b' to return to the previous parameter or 'q' to exit\n", p[i].prompt)
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("failed to read input with error: %+v, try again...", err)
-			continue
-		}
-		input = strings.Replace(input, "\n", "", -1)
-		switch strings.ToLower(input) {
-		case "q":
-			os.Exit(0)
-		case "b":
-			if i == 0 {
-				continue
-			}
-			return i - 1
-		default:
-			p[i].input = input
-			if err := p[i].validator(p[i]); err != nil {
-				fmt.Printf("Validation failed with error: %+v, try again...\n", err)
-				continue
-			}
-			if i+1 < len(p) {
-				i = getInput(p, i+1)
-			} else {
-				return i + 1
-			}
-		}
-	}
 }

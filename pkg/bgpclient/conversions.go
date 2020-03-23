@@ -58,25 +58,25 @@ func MarshalRD(rd bgp.RouteDistinguisherInterface) *any.Any {
 	var r proto.Message
 	switch v := rd.(type) {
 	case *bgp.RouteDistinguisherTwoOctetAS:
-		glog.Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherTwoOctetAS{
 			Admin:    uint32(v.Admin),
 			Assigned: v.Assigned,
 		}
 	case *bgp.RouteDistinguisherIPAddressAS:
-		glog.Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherIPAddress{
 			Admin:    v.Admin.String(),
 			Assigned: uint32(v.Assigned),
 		}
 	case *bgp.RouteDistinguisherFourOctetAS:
-		glog.Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherFourOctetAS{
 			Admin:    v.Admin,
 			Assigned: uint32(v.Assigned),
 		}
 	default:
-		glog.Infof("Unknown type: %+v", v)
+		glog.V(5).Infof("Unknown type: %+v", v)
 		return nil
 	}
 	a, _ := ptypes.MarshalAny(r)
@@ -110,7 +110,7 @@ func MarshalRT(rt bgp.ExtendedCommunityInterface) *any.Any {
 		}
 
 	default:
-		glog.Infof("Marshal RT Unknown type: %+v", v)
+		glog.V(5).Infof("Marshal RT Unknown type: %+v", v)
 		return nil
 	}
 	a, _ := ptypes.MarshalAny(r)
