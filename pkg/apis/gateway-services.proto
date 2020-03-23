@@ -135,8 +135,8 @@ service GatewayService {
   rpc WdBGPVPNv4(VPNv4Prefix) returns (google.protobuf.Empty);
   // API to advertise Labled Unicast Prefix(s), no response other than Success
   // or Failure is generated
-  // rpc AdvLUPrefix(LabeledUnicastPrefix) returns (google.protobuf.Empty);
+  rpc AdvLUPrefix(LabeledUnicastPrefix) returns (google.protobuf.Empty);
   // API to withdraw Labled Unicast Prefix(s), no response other than Success or
   // Failure is generated
-  // rpc WdLUPrefix(LabeledUnicastPrefix) returns (google.protobuf.Empty);
+  rpc WdLUPrefix(LabeledUnicastPrefix) returns (google.protobuf.Empty);
 }
