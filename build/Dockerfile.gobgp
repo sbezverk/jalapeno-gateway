@@ -1,0 +1,3 @@
+FROM scratch
+COPY ./bin/gobgpd /gobgpd
+ENTRYPOINT ["/gobgpd"]
