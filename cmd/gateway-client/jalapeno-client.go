@@ -308,7 +308,7 @@ func asnValidator(p parameter) error {
 	if err != nil {
 		return err
 	}
-	if asn <= 0 || asn >= math.MaxUint16 {
+	if asn <= 0 || asn >= math.MaxUint32 {
 		return fmt.Errorf("invalid ASN %d", asn)
 	}
 
