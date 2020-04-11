@@ -30,31 +30,23 @@ type arangoSrv struct {
 	collection string
 }
 
-// L3VPNPFibReply defines a structure of a single record reply from L3VPN_FIB collection
-type L3VPNPFibReply struct {
-	Prefix     string `json:"VPN_Prefix,omitempty"`
-	MaskLength uint32 `json:"VPN_Prefix_Len,omitempty"`
-	VpnLabel   uint32 `json:"VPN_Label,omitempty"`
-	SidLabel   uint32 `json:"PrefixSID,omitempty"`
-	RT         string `json:"RT,omitempty"`
-}
-
 func (a *arangoSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
 	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
 
 	filters := buildFilter(req)
 	query, bindVars := buildQuery(a.collection, filters...)
-	err = db.ValidateQuery(context.Background(), query)
-	if err != nil {
+	if err := a.db.ValidateQuery(context.Background(), query); err != nil {
 		return &dbclient.L3VpnResp{}, fmt.Errorf("ValidateQuery failed with error: %+v", err)
 	}
-	prefix, err := runQuery(a.db, query)
+	prefix, err := runQuery(a.db, query, bindVars)
 	if err != nil {
 		return &dbclient.L3VpnResp{}, fmt.Errorf("runQuery failed with error: %+v", err)
 	}
 	glog.Infof("Prefixes: %+v", prefix)
 
-	return &dbclient.L3VpnResp{}, nil
+	return &dbclient.L3VpnResp{
+		Prefix: prefix,
+	}, nil
 }
 
 func (a *arangoSrv) Connector(addr string) error {
@@ -136,16 +128,15 @@ type filter struct {
 
 func buildFilter(req *dbclient.L3VpnReq) []filter {
 	filters := make([]filter, 0)
-
-	filters["ipv4"] = req.IPv4
+	filters = append(filters, filter{key: "ipv4", value: req.IPv4})
 	if req.RD != "" {
-		filters["rd"] = req.RD
+		filters = append(filters, filter{key: "rd", value: req.RD})
 	}
 	if req.Prefix != "" {
-		filters["prefix"] = req.Prefix
+		filters = append(filters, filter{key: "prefix", value: req.Prefix})
 	}
 	if req.MaskLength != 0 {
-		filters["mask"] = req.MaskLength
+		filters = append(filters, filter{key: "mask", value: req.MaskLength})
 	}
 
 	return filters
@@ -182,15 +173,15 @@ func buildQuery(collection string, filters ...filter) (string, map[string]interf
 	return query, bindVars
 }
 
-func runQuery(db driver.Database, query string, bindVars map[string]interface{}) ([]L3VPNPFibReply, error) {
+func runQuery(db driver.Database, query string, bindVars map[string]interface{}) ([]dbclient.L3VPNPrefix, error) {
 	cursor, err := db.Query(context.TODO(), query, bindVars)
 	if err != nil {
 		return nil, fmt.Errorf("Query failed with error: %+v", err)
 	}
 	defer cursor.Close()
-	i := make([]L3VPNPFibReply, 0)
+	i := make([]dbclient.L3VPNPrefix, 0)
 	for {
-		var reply L3VPNPFibReply
+		var reply dbclient.L3VPNPrefix
 		_, err = cursor.ReadDocument(context.Background(), &reply)
 		if driver.IsNoMoreDocuments(err) {
 			break
