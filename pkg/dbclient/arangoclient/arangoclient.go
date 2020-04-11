@@ -30,8 +30,30 @@ type arangoSrv struct {
 	collection string
 }
 
+// L3VPNPFibReply defines a structure of a single record reply from L3VPN_FIB collection
+type L3VPNPFibReply struct {
+	Prefix     string `json:"VPN_Prefix,omitempty"`
+	MaskLength uint32 `json:"VPN_Prefix_Len,omitempty"`
+	VpnLabel   uint32 `json:"VPN_Label,omitempty"`
+	SidLabel   uint32 `json:"PrefixSID,omitempty"`
+	RT         string `json:"RT,omitempty"`
+}
+
 func (a *arangoSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
 	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
+
+	filters := buildFilter(req)
+	query, bindVars := buildQuery(a.collection, filters...)
+	err = db.ValidateQuery(context.Background(), query)
+	if err != nil {
+		return &dbclient.L3VpnResp{}, fmt.Errorf("ValidateQuery failed with error: %+v", err)
+	}
+	prefix, err := runQuery(a.db, query)
+	if err != nil {
+		return &dbclient.L3VpnResp{}, fmt.Errorf("runQuery failed with error: %+v", err)
+	}
+	glog.Infof("Prefixes: %+v", prefix)
+
 	return &dbclient.L3VpnResp{}, nil
 }
 
@@ -105,4 +127,78 @@ func NewArangoDBClient(user string, pass string, dbName string, collection strin
 		dbName:     dbName,
 		collection: collection,
 	}
+}
+
+type filter struct {
+	key   string
+	value interface{}
+}
+
+func buildFilter(req *dbclient.L3VpnReq) []filter {
+	filters := make([]filter, 0)
+
+	filters["ipv4"] = req.IPv4
+	if req.RD != "" {
+		filters["rd"] = req.RD
+	}
+	if req.Prefix != "" {
+		filters["prefix"] = req.Prefix
+	}
+	if req.MaskLength != 0 {
+		filters["mask"] = req.MaskLength
+	}
+
+	return filters
+}
+
+func buildQuery(collection string, filters ...filter) (string, map[string]interface{}) {
+	var query string
+	var bindVars map[string]interface{}
+
+	// Adding initial part of the query
+	query += fmt.Sprintf("for q in %s ", collection)
+	// If filters are provided, add corresponding filters to the query
+	if len(filters) != 0 {
+		bindVars = make(map[string]interface{}, 0)
+		query += "filter "
+	}
+	for i, f := range filters {
+		switch f.key {
+		case "rd":
+			query += fmt.Sprintf("q.RD == @rd ")
+			bindVars[f.key] = f.value
+		case "ipv4":
+			query += fmt.Sprintf("q.IPv4 == @ipv4 ")
+			bindVars[f.key] = f.value
+		case "mask":
+		case "prefix":
+		}
+		if i < len(filters)-1 {
+			query += "and "
+		}
+	}
+	query += "return q"
+
+	return query, bindVars
+}
+
+func runQuery(db driver.Database, query string, bindVars map[string]interface{}) ([]L3VPNPFibReply, error) {
+	cursor, err := db.Query(context.TODO(), query, bindVars)
+	if err != nil {
+		return nil, fmt.Errorf("Query failed with error: %+v", err)
+	}
+	defer cursor.Close()
+	i := make([]L3VPNPFibReply, 0)
+	for {
+		var reply L3VPNPFibReply
+		_, err = cursor.ReadDocument(context.Background(), &reply)
+		if driver.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("ReadDocument failed with error: %+v", err)
+		}
+		i = append(i, reply)
+	}
+
+	return i, nil
 }
