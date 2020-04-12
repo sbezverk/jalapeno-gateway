@@ -30,11 +30,11 @@ type L3VpnReq struct {
 
 // L3VPNPrefix defines L3 VPN prefix Database object
 type L3VPNPrefix struct {
-	Prefix     string
-	MaskLength uint32
-	VpnLabel   uint32
-	SidLabel   uint32
-	RT         []string
+	Prefix     string   `json:"VPN_Prefix,omitempty"`
+	MaskLength uint32   `json:"VPN_Prefix_Len,omitempty"`
+	VpnLabel   uint32   `json:"VPN_Label,omitempty"`
+	SidLabel   uint32   `json:"PrefixSID,omitempty"`
+	RT         []string `json:"RT,omitempty"`
 }
 
 // L3VpnResp defines data struct for L3 VPN database response

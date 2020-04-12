@@ -11,7 +11,6 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
-	"github.com/golang/glog"
 
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
@@ -28,11 +27,6 @@ type arangoSrv struct {
 	client     driver.Client
 	db         driver.Database
 	collection string
-}
-
-func (a *arangoSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
-	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
-	return &dbclient.L3VpnResp{}, nil
 }
 
 func (a *arangoSrv) Connector(addr string) error {
@@ -105,4 +99,9 @@ func NewArangoDBClient(user string, pass string, dbName string, collection strin
 		dbName:     dbName,
 		collection: collection,
 	}
+}
+
+type filter struct {
+	key   string
+	value interface{}
 }

@@ -96,7 +96,7 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	asn, _ := strconv.Atoi(p[2].input)
 	// Get and marshal RD
 	rd, _ := marshalRD(p[3].input)
-	// Get and marshal RT
+	// Get and marshal a slice of RTs
 	rt, _ := marshalRT(p[4].input)
 	// Get VPN label
 	vpnLabel, _ := getLabel(p[5].input)
@@ -308,7 +308,7 @@ func asnValidator(p parameter) error {
 	if err != nil {
 		return err
 	}
-	if asn <= 0 || asn >= math.MaxUint16 {
+	if asn <= 0 || asn >= math.MaxUint32 {
 		return fmt.Errorf("invalid ASN %d", asn)
 	}
 
