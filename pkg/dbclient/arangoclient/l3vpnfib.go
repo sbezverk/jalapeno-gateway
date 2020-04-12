@@ -40,6 +40,9 @@ func buildFilter(req *dbclient.L3VpnReq) []filter {
 	if req.MaskLength != 0 {
 		filters = append(filters, filter{key: "mask", value: req.MaskLength})
 	}
+	if len(req.RT) != 0 {
+		filters = append(filters, filter{key: "rt", value: req.RT})
+	}
 
 	return filters
 }
@@ -63,8 +66,24 @@ func buildQuery(collection string, filters ...filter) (string, map[string]interf
 		case "ipv4":
 			query += fmt.Sprintf("q.IPv4 == @ipv4 ")
 			bindVars[f.key] = f.value
-		case "mask":
+		case "rt":
+			// Since RT is a slice of strings, building filtering expression on the fly
+			// no need for bindVars.
+			query += fmt.Sprintf("[")
+			rts := f.value.([]string)
+			for i, rt := range rts {
+				query += fmt.Sprintf("%q", rt)
+				if i < len(rts)-1 {
+					query += ","
+				}
+			}
+			query += fmt.Sprintf("] all in q.RT ")
 		case "prefix":
+			query += fmt.Sprintf("q.VPN_Prefix == @prefix ")
+			bindVars[f.key] = f.value
+		case "mask":
+			query += fmt.Sprintf("q.VPN_Prefix_Len == @mask ")
+			bindVars[f.key] = f.value
 		}
 		if i < len(filters)-1 {
 			query += "and "
