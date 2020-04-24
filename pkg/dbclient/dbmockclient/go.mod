@@ -1,6 +1,6 @@
-module dbmockclient
+module github.com/sbezverk/jalapeno-gateway/pkg/dbmockclient
 
-go 1.13
+go 1.14
 
 replace (
 	github.com/sbezverk/jalapeno-gateway => ../../../../jalapeno-gateway

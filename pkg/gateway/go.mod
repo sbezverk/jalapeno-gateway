@@ -1,4 +1,4 @@
-module gateway
+module github.com/sbezverk/jalapeno-gateway/pkg/gateway
 
 go 1.13
 
