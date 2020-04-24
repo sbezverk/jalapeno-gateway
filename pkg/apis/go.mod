@@ -1,3 +1,3 @@
-module apis
+module github.com/sbezverk/jalapeno-gateway/pkg/apis
 
-go 1.13
+go 1.14
