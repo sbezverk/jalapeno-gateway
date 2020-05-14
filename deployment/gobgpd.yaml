@@ -6,32 +6,20 @@ data:
       config:
         as: 5070
         port: 179
-        router-id: 57.112.1.254 
+        router-id: 9.9.9.9
       apply-policy:
         config:
           default-import-policy: accept-route
           default-export-policy: accept-route
     neighbors:
       - config:
-          neighbor-address: 192.168.80.128
+          neighbor-address: 2001:470:b16e:59::5
           peer-as: 5070
-          #        ebgp-multihop:
-          #          config:
-          #            enabled: true
-          #            multihop-ttl: 5
         afi-safis:
-          - config:
-              afi-safi-name: "ipv4-unicast"
           - config:
               afi-safi-name: "ipv6-unicast"
           - config:
-              afi-safi-name: "ipv4-labelled-unicast"
-          - config:
-              afi-safi-name: "ipv6-labelled-unicast"
-          - config:
               afi-safi-name: "l3vpn-ipv4-unicast"
-          - config:
-              afi-safi-name: "l3vpn-ipv6-unicast"
 metadata:
   name: gobgpd-config
   namespace: default
@@ -44,15 +32,9 @@ spec:
       port: 5051
       protocol: TCP
       targetPort: gobgpd-api
-  #    - name: gobgpd-bgp
-  #      port: 57179
-  #      protocol: TCP
-  #      targetPort: gobgpd-bgp
   selector:
     app: gobgpd
   type: ClusterIP
-#  externalIPs:
-#  - 192.168.80.103
 metadata:
   name: gobgpd
   namespace: default
@@ -72,15 +54,12 @@ spec:
     spec:
       containers:
         - name: gobgpd
-          image: docker.io/sbezverk/gobgpd:v2.15.0
+          image: 192.168.80.240:4000/jalapeno/gobgpd-srv6:master
           imagePullPolicy: Always
           ports:
             - containerPort: 50051
               name: gobgpd-api
               protocol: TCP
-          #            - containerPort: 179
-          #              name: gobgpd-bgp
-          #              protocol: TCP
           args:
             - --config-file
             - "/config/gobgp-config.yaml"
