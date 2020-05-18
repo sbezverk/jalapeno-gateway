@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
 
@@ -37,7 +38,7 @@ type mockSrv struct {
 	vpnStore map[string][]Record
 }
 
-func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
+func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.MPLSL3VpnResp, error) {
 	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
 
 	// Initial lookup for requested RD, if it is not in the store, return error
@@ -63,21 +64,27 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 		return nil, fmt.Errorf("no matching records to found")
 	}
 
-	vpnPrefix := make([]dbclient.L3VPNPrefix, 0)
+	vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
 	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
-		vpnPrefix = append(vpnPrefix, dbclient.L3VPNPrefix{
-			Prefix:     r.Prefix,
-			MaskLength: r.Mask,
-			VpnLabel:   r.VPN,
-			SidLabel:   r.PrefixSID,
+		vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
+			Prefix: &pbapi.Prefix{
+				Address:    []byte(r.Prefix),
+				MaskLength: r.Mask,
+			},
+			VpnLabel: r.VPN,
 		})
 	}
-	resp := dbclient.L3VpnResp{
+	resp := dbclient.MPLSL3VpnResp{
 		Prefix: vpnPrefix,
 	}
 
 	return &resp, nil
+}
+
+func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.SRv6L3VpnResp, error) {
+	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
+	return &dbclient.SRv6L3VpnResp{}, nil
 }
 
 func (m *mockSrv) Connector(addr string) error {

@@ -80,7 +80,6 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 			fmt.Printf("\nrequest failed with error: %+v\n\n\n", err)
 			continue
 		}
-		fmt.Printf("\nSuccessfully advertised prefix %s in VRF RD: %s\n\n\n", parameters[0].input, parameters[3].input)
 	}
 }
 
@@ -95,7 +94,7 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	// Get ASN
 	//	asn, _ := strconv.Atoi(p[2].input)
 	// Get and marshal RD
-	rd, _ := marshalRD(p[3].input)
+	rd, _ := marshalRD(p[0].input)
 	// Get and marshal a slice of RTs
 	//	rt, _ := marshalRT(p[4].input)
 	// Get VPN label
@@ -104,9 +103,9 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	// ucastLabel, _ := getLabel(p[6].input)
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
 	if err != nil {
-		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[3].input, err)
+		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[0].input, err)
 	}
-	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[3].input)
+	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[0].input)
 	for _, p := range prefixes {
 		fmt.Printf("- %s/%d\n", net.IP(p.Prefix.Address).String(), p.Prefix.MaskLength)
 	}

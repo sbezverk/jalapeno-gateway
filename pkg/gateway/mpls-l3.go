@@ -57,22 +57,22 @@ func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 
 	rq := dbclient.NewL3VpnReq(rd.String(), rts, req.Ipv4, addr, uint32(mask))
 
-	rs, err := dbi.L3VPNRequest(context.TODO(), rq)
+	rs, err := dbi.MPLSL3VpnRequest(context.TODO(), rq)
 	if err != nil {
 		return nil, err
 	}
 
-	vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
-	for _, p := range rs.Prefix {
-		vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
-			Prefix: &pbapi.Prefix{
-				Address:    net.ParseIP(p.Prefix),
-				MaskLength: p.MaskLength,
-			},
-			VpnLabel: p.VpnLabel,
-		})
-	}
+	// vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
+	// for _, p := range rs.Prefix {
+	// 	vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
+	// 		Prefix: &pbapi.Prefix{
+	// 			Address:    net.ParseIP(p.Prefix),
+	// 			MaskLength: p.MaskLength,
+	// 		},
+	// 		VpnLabel: p.VpnLabel,
+	// 	})
+	// }
 
 	return &pbapi.MPLSL3Response{
-		MplsPrefix: vpnPrefix}, nil
+		MplsPrefix: rs.Prefix}, nil
 }
