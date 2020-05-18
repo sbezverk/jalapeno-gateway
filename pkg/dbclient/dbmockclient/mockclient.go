@@ -13,8 +13,8 @@ import (
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
 
-// Record represents the database record structure
-type Record struct {
+// MPLSL3Record represents the database record structure
+type MPLSL3Record struct {
 	Key             string `json:"_key,omitempty"`
 	ID              string `json:"_id,omitempty"`
 	From            string `json:"_from,omitempty"`
@@ -25,7 +25,6 @@ type Record struct {
 	Prefix          string `json:"VPN_Prefix,omitempty"`
 	Mask            uint32 `json:"VPN_Prefix_Len,omitempty"`
 	RouterID        string `json:"RouterID,omitempty"`
-	PrefixSID       uint32 `json:"PrefixSID,omitempty"`
 	VPN             uint32 `json:"VPN_Label,omitempty"`
 	RD              string `json:"RD"`
 	IPv4            bool   `json:"IPv4,omitempty"`
@@ -34,8 +33,29 @@ type Record struct {
 	Destination     string `json:"Destination,omitempty"`
 }
 
+// SRv6Record represents the database record structure
+type SRv6Record struct {
+	Key             string           `json:"_key,omitempty"`
+	ID              string           `json:"_id,omitempty"`
+	From            string           `json:"_from,omitempty"`
+	To              string           `json:"_to,omitempty"`
+	Rev             string           `json:"_rev,omitempty"`
+	SourceAddr      string           `json:"SrcIP,omitempty"`
+	DestinationAddr string           `json:"DstIP,omitempty"`
+	Prefix          string           `json:"VPN_Prefix,omitempty"`
+	Mask            uint32           `json:"VPN_Prefix_Len,omitempty"`
+	RouterID        string           `json:"RouterID,omitempty"`
+	RD              string           `json:"RD"`
+	IPv4            bool             `json:"IPv4,omitempty"`
+	RT              string           `json:"RT,omitempty"`
+	Source          string           `json:"Source,omitempty"`
+	Destination     string           `json:"Destination,omitempty"`
+	PrefixSID       *pbapi.PrefixSID `json:"Prefix_SID,omitempty"`
+}
+
 type mockSrv struct {
-	vpnStore map[string][]Record
+	vpnStore  map[string][]MPLSL3Record
+	srv6Store map[string][]SRv6Record
 }
 
 func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.MPLSL3VpnResp, error) {
@@ -100,8 +120,8 @@ func (m *mockSrv) Validator(addr string) error {
 	return nil
 }
 
-func filterByIPFamily(ipv4 bool, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByIPFamily(ipv4 bool, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	for _, r := range records {
 		if r.IPv4 == ipv4 {
 			result = append(result, r)
@@ -110,8 +130,8 @@ func filterByIPFamily(ipv4 bool, records []Record) []Record {
 
 	return result
 }
-func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByPrefix(prefix string, mask uint32, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	for _, r := range records {
 		if r.Prefix == prefix && r.Mask == mask {
 			result = append(result, r)
@@ -123,8 +143,8 @@ func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
 	return result
 }
 
-func filterByRT(rts []string, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByRT(rts []string, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	match := 0
 	for _, r := range records {
 		for _, rrt := range strings.Split(r.RT, ",") {
@@ -168,18 +188,18 @@ func NewMockDBClient(fn ...string) dbclient.DBClient {
 		glog.Errorf("failed to read testdata.json with error: %+v", err)
 		return nil
 	}
-	records := make([]Record, 0)
+	records := make([]MPLSL3Record, 0)
 	if err := json.Unmarshal(b, &records); err != nil {
 		glog.Errorf("failed to unmarshal testdata with error: %+v", err)
 		return nil
 	}
 
 	ds := mockSrv{
-		vpnStore: make(map[string][]Record, 0),
+		vpnStore: make(map[string][]MPLSL3Record, 0),
 	}
 	for _, r := range records {
 		if _, ok := ds.vpnStore[r.RD]; !ok {
-			ds.vpnStore[r.RD] = make([]Record, 0)
+			ds.vpnStore[r.RD] = make([]MPLSL3Record, 0)
 		}
 		ds.vpnStore[r.RD] = append(ds.vpnStore[r.RD], r)
 	}
