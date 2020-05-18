@@ -59,6 +59,8 @@ message SRv6L3Prefix {
   google.protobuf.Any rd = 4;
   // VPN Prefix's RTs
   repeated google.protobuf.Any rt = 5;
+  // Label
+  int32 label = 6;
   // VPN Prefix's Prefix SID
-  PrefixSID prefix_sid = 6;
+  PrefixSID prefix_sid = 7;
 }

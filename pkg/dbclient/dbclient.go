@@ -3,6 +3,7 @@ package dbclient
 import (
 	"context"
 
+	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 )
@@ -48,7 +49,7 @@ type SRv6L3VpnPrefix struct {
 	Prefix     string
 	MaskLength uint32
 	RT         []string
-	PrefixSID  *pbapi.PrefixSID
+	PrefixSID  *srv6.L3Service
 }
 
 // SRv6L3VpnResp defines data struct for SRv6 L3 VPN database response
