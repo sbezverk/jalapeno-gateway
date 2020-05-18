@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3VPNResponse, error) {
+func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbapi.MPLSL3Response, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		client := md.Get("CLIENT_IP")
@@ -31,7 +31,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 	}
 	rd, err := bgpclient.UnmarshalRD(req.Rd)
 	if err != nil {
-		return &pbapi.L3VPNResponse{}, err
+		return &pbapi.MPLSL3Response{}, err
 	}
 	glog.V(5).Infof("L3VPN request for RD: %s", rd.String())
 
@@ -40,7 +40,7 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 	if req.Rt != nil {
 		rt, err := bgpclient.UnmarshalRT(req.Rt)
 		if err != nil {
-			return &pbapi.L3VPNResponse{}, err
+			return &pbapi.MPLSL3Response{}, err
 		}
 		for _, r := range rt {
 			rts = append(rts, r.String())
@@ -62,18 +62,17 @@ func (g *gateway) L3VPN(ctx context.Context, req *pbapi.L3VPNRequest) (*pbapi.L3
 		return nil, err
 	}
 
-	vpnPrefix := make([]*pbapi.VPNPrefix, 0)
+	vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
 	for _, p := range rs.Prefix {
-		vpnPrefix = append(vpnPrefix, &pbapi.VPNPrefix{
+		vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
 			Prefix: &pbapi.Prefix{
 				Address:    net.ParseIP(p.Prefix),
 				MaskLength: p.MaskLength,
 			},
 			VpnLabel: p.VpnLabel,
-			SidLabel: p.SidLabel,
 		})
 	}
 
-	return &pbapi.L3VPNResponse{
-		VpnPrefix: vpnPrefix}, nil
+	return &pbapi.MPLSL3Response{
+		MplsPrefix: vpnPrefix}, nil
 }
