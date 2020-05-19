@@ -101,7 +101,7 @@ func main() {
 
 func makeMockDBClient(mockDataPath string) (srvclient.SrvClient, error) {
 	// TODO, Authentication credentials should be passed as a parameters.
-	db, err := srvclient.NewSrvClient("", mock.NewMockDBClient(mockDataPath+"testdata.json"))
+	db, err := srvclient.NewSrvClient("", mock.NewMockDBClient(false, mockDataPath+"testdata.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new Mock DB client with error: %w", err)
 	}

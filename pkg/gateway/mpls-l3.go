@@ -62,17 +62,6 @@ func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 		return nil, err
 	}
 
-	// vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
-	// for _, p := range rs.Prefix {
-	// 	vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
-	// 		Prefix: &pbapi.Prefix{
-	// 			Address:    net.ParseIP(p.Prefix),
-	// 			MaskLength: p.MaskLength,
-	// 		},
-	// 		VpnLabel: p.VpnLabel,
-	// 	})
-	// }
-
 	return &pbapi.MPLSL3Response{
 		MplsPrefix: rs.Prefix}, nil
 }
