@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
 	"github.com/sbezverk/gobmp/pkg/bgp"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
 
@@ -116,13 +119,20 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
 	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
-		srv6Prefix = append(srv6Prefix, &pbapi.SRv6L3Prefix{
+		p := &pbapi.SRv6L3Prefix{
 			Prefix: &pbapi.Prefix{
 				Address:    []byte(r.Prefix),
 				MaskLength: uint32(r.PrefixLen),
 			},
-			Label: int32(r.Labels[0]),
-		})
+			Label:     int32(r.Labels[0]),
+			NhAddress: []byte(r.Nexthop),
+			PrefixSid: &pbapi.PrefixSID{},
+		}
+		if asn, err := strconv.Atoi(r.OriginAS); err == nil {
+			p.Asn = uint32(asn)
+		}
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.PrefixSID})
+		srv6Prefix = append(srv6Prefix, p)
 	}
 	resp := dbclient.SRv6L3VpnResp{
 		Prefix: srv6Prefix,

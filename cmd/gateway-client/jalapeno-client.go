@@ -107,7 +107,7 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	}
 	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[0].input)
 	for _, p := range prefixes {
-		fmt.Printf("- %s/%d\n", net.IP(p.Prefix.Address).String(), p.Prefix.MaskLength)
+		fmt.Printf("\n- %+v\n\n", p)
 	}
 	return nil
 }

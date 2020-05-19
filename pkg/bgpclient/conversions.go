@@ -9,6 +9,8 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	api "github.com/osrg/gobgp/api"
 	"github.com/osrg/gobgp/pkg/packet/bgp"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
+	"github.com/sbezverk/gobmp/pkg/srv6"
 )
 
 // UnmarshalRD unmarshals Route Distinguisher from Proto message
@@ -125,4 +127,107 @@ func MarshalRTs(rts []bgp.ExtendedCommunityInterface) []*any.Any {
 	}
 
 	return a
+}
+
+func MarshalPrefixSID(psid *prefixsid.PSid) []*any.Any {
+	mtlvs := make([]*any.Any, 0)
+	if psid == nil {
+		return mtlvs
+	}
+	var r proto.Message
+	switch {
+	case psid.SRv6L3Service != nil:
+		o := &api.SRv6L3ServiceTLV{}
+		o.SubTlvs = MarshalSRv6SubTLVs(psid.SRv6L3Service.ServiceSubTLVs)
+		r = o
+	default:
+		return nil
+	}
+	a, _ := ptypes.MarshalAny(r)
+	mtlvs = append(mtlvs, a)
+
+	return mtlvs
+}
+
+func MarshalSRv6SubTLVs(tlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api.SRv6TLV {
+	mtlvs := make(map[uint32]*api.SRv6TLV)
+	for t, tlv := range tlvs {
+		var r proto.Message
+		switch t {
+		case 1:
+			for _, stlv := range tlv {
+				m, ok := stlv.Value.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				for k, v := range m {
+					glog.Infof("><SB> k: %+v v: %+v", k, v)
+				}
+
+				istlv, ok := m["key_value"].(*srv6.InformationSubTLV)
+				if !ok {
+					continue
+				}
+				o := &api.SRv6InformationSubTLV{
+					EndpointBehavior: uint32(istlv.EndpointBehavior),
+					Flags:            &api.SRv6SIDFlags{},
+				}
+				o.Sid = make([]byte, len(istlv.SID))
+				copy(o.Sid, istlv.SID)
+				o.SubSubTlvs = MarshalSRv6SubSubTLVs(istlv.SubSubTLV)
+				// SRv6 Information Sub TLV is type 1 Sub TLV
+				glog.Infof("><SB> o: %+v", *o)
+				r = o
+				a, _ := ptypes.MarshalAny(r)
+				tlvs, ok := mtlvs[uint32(t)]
+				if !ok {
+					tlvs = &api.SRv6TLV{
+						Tlv: make([]*any.Any, 0),
+					}
+					mtlvs[uint32(t)] = tlvs
+				}
+				tlvs.Tlv = append(tlvs.Tlv, a)
+			}
+		default:
+			return nil
+		}
+	}
+
+	return mtlvs
+}
+
+func MarshalSRv6SubSubTLVs(stlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api.SRv6TLV {
+	mtlvs := make(map[uint32]*api.SRv6TLV)
+	for t, tlv := range stlvs {
+		var r proto.Message
+		switch t {
+		case 1:
+			for _, stlv := range tlv {
+				sstlv := stlv.Value.(*srv6.SIDStructureSubSubTLV)
+				o := &api.SRv6StructureSubSubTLV{
+					LocalBlockLength:    uint32(sstlv.LocalBlockLength),
+					LocalNodeLength:     uint32(sstlv.LocatorNodeLength),
+					FunctionLength:      uint32(sstlv.FunctionLength),
+					ArgumentLength:      uint32(sstlv.ArgumentLength),
+					TranspositionLength: uint32(sstlv.TranspositionLength),
+					TranspositionOffset: uint32(sstlv.TranspositionOffset),
+				}
+				// SRv6 Information Sub TLV is type 1 Sub TLV
+				r = o
+				a, _ := ptypes.MarshalAny(r)
+				tlvs, ok := mtlvs[uint32(t)]
+				if !ok {
+					tlvs = &api.SRv6TLV{
+						Tlv: make([]*any.Any, 0),
+					}
+					mtlvs[uint32(t)] = tlvs
+				}
+				tlvs.Tlv = append(tlvs.Tlv, a)
+			}
+		default:
+			return nil
+		}
+	}
+
+	return mtlvs
 }

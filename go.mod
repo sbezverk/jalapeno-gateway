@@ -6,8 +6,8 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.0
-	github.com/osrg/gobgp v2.0.0+incompatible
-	github.com/sbezverk/gobmp v0.0.0-20200513013057-910959c753b6
+	github.com/osrg/gobgp v0.0.0-20200513035851-833188f52610
+	github.com/sbezverk/gobmp v0.0.0-20200519163254-175f78130367
 	golang.org/x/net v0.0.0-20200421231249-e086a090c8fd // indirect
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 	golang.org/x/text v0.3.2 // indirect

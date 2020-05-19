@@ -12,10 +12,10 @@
     "labels": [
       1040
     ],
-    "vpn_rd": "5070:65033",
+    "vpn_rd": "100:100",
     "vpn_rd_type": 0,
     "srv6_l3_service": {
-      "service_sub_tlv": {
+      "service_sub_tlvs": {
         "1": [
           {
             "key_value": {
@@ -53,10 +53,10 @@
     "labels": [
       1040
     ],
-    "vpn_rd": "5070:65044",
+    "vpn_rd": "101:101",
     "vpn_rd_type": 0,
     "srv6_l3_service": {
-      "service_sub_tlv": {
+      "service_sub_tlvs": {
         "1": [
           {
             "key_value": {
