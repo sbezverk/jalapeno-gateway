@@ -76,6 +76,10 @@ github.com/sbezverk/gobmp v0.0.0-20200513013057-910959c753b6 h1:WMPDVwYXJOwP6I1s
 github.com/sbezverk/gobmp v0.0.0-20200513013057-910959c753b6/go.mod h1:C7QPYai013/d2OMO0IvQPX+YsUsySMlYGd5zoFNYyqA=
 github.com/sbezverk/gobmp v0.0.0-20200519163254-175f78130367 h1:Xoq8rLI5WcsIwo0fxAeGTzk2B4EV2lpJJgn6OZYAcm0=
 github.com/sbezverk/gobmp v0.0.0-20200519163254-175f78130367/go.mod h1:C7QPYai013/d2OMO0IvQPX+YsUsySMlYGd5zoFNYyqA=
+github.com/sbezverk/gobmp v0.0.0-20200519184024-75d76433e84e h1:Fwbx8yBvrbPhCZ8jzHYgDy7gzHO61pGvfxEvOP2HoBE=
+github.com/sbezverk/gobmp v0.0.0-20200519184024-75d76433e84e/go.mod h1:C7QPYai013/d2OMO0IvQPX+YsUsySMlYGd5zoFNYyqA=
+github.com/sbezverk/gobmp v0.0.0-20200520155357-81f07660a59a h1:+2jy/kLtuV5INjGAgV5znL/4SO7AFlCnwQ2jVxDYcaw=
+github.com/sbezverk/gobmp v0.0.0-20200520155357-81f07660a59a/go.mod h1:C7QPYai013/d2OMO0IvQPX+YsUsySMlYGd5zoFNYyqA=
 github.com/segmentio/kafka-go v0.3.6/go.mod h1:8rEphJEczp+yDE/R5vwmaqZgF1wllrl4ioQcNKB8wVA=
 github.com/sirupsen/logrus v0.0.0-20170713114250-a3f95b5c4235/go.mod h1:pMByvHTf9Beacp5x1UXfOR9xyW/9antXMhjMPG0dEzc=
 github.com/spf13/afero v0.0.0-20170217164146-9be650865eab/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=

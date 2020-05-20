@@ -1,84 +1,80 @@
 [
-  {
-    "base_attrs": {
-      "ext_community_list": "rt=5:65003"
-    },
-    "prefix": "192.168.5.1",
-    "prefix_len": 32,
-    "is_ipv4": true,
-    "origin_as": "65003",
-    "nexthop": "192:168:5::3",
-    "is_nexthop_ipv4": false,
-    "labels": [
-      1040
-    ],
-    "vpn_rd": "100:100",
-    "vpn_rd_type": 0,
-    "srv6_l3_service": {
-      "service_sub_tlvs": {
-        "1": [
-          {
-            "key_value": {
-              "information_sub_tlv_sid": "2001:0:5:3::",
-              "information_sub_tlv_endpoint_behavior": 17,
-              "sub_sub_tlv": {
-                "1": [
-                  {
-                    "key_value": {
+    {
+      "base_attrs": {
+        "ext_community_list": "rt=5:65003"
+      },
+      "prefix": "192.168.5.1",
+      "prefix_len": 32,
+      "is_ipv4": true,
+      "origin_as": "65003",
+      "nexthop": "192:168:5::3",
+      "is_nexthop_ipv4": false,
+      "labels": [
+        1040
+      ],
+      "vpn_rd": "100:100",
+      "vpn_rd_type": 0,
+      "prefix_sid": {
+        "srv6_l3_service": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:3::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
                       "local_block_length": 40,
-                      "locator_node_length": 24,
+                      "local_node_length": 24,
                       "function_length": 16,
                       "transposition_length": 16,
                       "transposition_offset": 64
                     }
-                  }
-                ]
+                  ]
+                }
               }
-            }
+            ]
           }
-        ]
+        }
       }
-    }
-  },
-  {
-    "base_attrs": {
-      "ext_community_list": "rt=5:65004"
     },
-    "prefix": "192.168.5.2",
-    "prefix_len": 32,
-    "is_ipv4": true,
-    "origin_as": "65004",
-    "nexthop": "192:168:5::4",
-    "is_nexthop_ipv4": false,
-    "labels": [
-      1040
-    ],
-    "vpn_rd": "101:101",
-    "vpn_rd_type": 0,
-    "srv6_l3_service": {
-      "service_sub_tlvs": {
-        "1": [
-          {
-            "key_value": {
-              "information_sub_tlv_sid": "2001:0:5:4::",
-              "information_sub_tlv_endpoint_behavior": 17,
-              "sub_sub_tlv": {
-                "1": [
-                  {
-                    "key_value": {
+    {
+      "base_attrs": {
+        "ext_community_list": "rt=5:65004"
+      },
+      "prefix": "192.168.5.2",
+      "prefix_len": 32,
+      "is_ipv4": true,
+      "origin_as": "65004",
+      "nexthop": "192:168:5::4",
+      "is_nexthop_ipv4": false,
+      "labels": [
+        1040
+      ],
+      "vpn_rd": "101:101",
+      "vpn_rd_type": 0,
+      "prefix_sid": {
+        "srv6_l3_service": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
                       "local_block_length": 40,
-                      "locator_node_length": 24,
+                      "local_node_length": 24,
                       "function_length": 16,
                       "transposition_length": 16,
                       "transposition_offset": 64
                     }
-                  }
-                ]
+                  ]
+                }
               }
-            }
+            ]
           }
-        ]
+        }
       }
     }
-  }    
-]
+  ]

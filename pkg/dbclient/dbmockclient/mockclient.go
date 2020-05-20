@@ -12,7 +12,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/sbezverk/gobmp/pkg/bgp"
 	"github.com/sbezverk/gobmp/pkg/prefixsid"
-	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -50,7 +49,7 @@ type SRv6L3Record struct {
 	Labels         []uint32            `json:"labels,omitempty"`
 	VPNRD          string              `json:"vpn_rd,omitempty"`
 	VPNRDType      uint16              `json:"vpn_rd_type"`
-	PrefixSID      *srv6.L3Service     `json:"srv6_l3_service,omitempty"`
+	PrefixSID      *prefixsid.PSid     `json:"prefix_sid,omitempty"`
 }
 
 type mockSrv struct {
@@ -131,7 +130,7 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		if asn, err := strconv.Atoi(r.OriginAS); err == nil {
 			p.Asn = uint32(asn)
 		}
-		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.PrefixSID})
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
 		srv6Prefix = append(srv6Prefix, p)
 	}
 	resp := dbclient.SRv6L3VpnResp{

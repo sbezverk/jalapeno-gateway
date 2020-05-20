@@ -14,6 +14,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/osrg/gobgp/pkg/packet/bgp"
+	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"google.golang.org/grpc"
@@ -107,7 +108,16 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	}
 	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[0].input)
 	for _, p := range prefixes {
-		fmt.Printf("\n- %+v\n\n", p)
+		if p.PrefixSid != nil {
+			if psid, err := bgpclient.UnmarshalPrefixSID(p.PrefixSid.Tlvs); err == nil {
+				if psid.SRv6L3Service != nil {
+					for _, t := range psid.SRv6L3Service.SubTLVs[1] {
+						s := t.(*srv6.InformationSubTLV).SubSubTLVs[1][0]
+						fmt.Printf("SubTLV: %+v SubSubTLVs: %+v\n", t, s.(*srv6.SIDStructureSubSubTLV))
+					}
+				}
+			}
+		}
 	}
 	return nil
 }

@@ -129,6 +129,7 @@ func MarshalRTs(rts []bgp.ExtendedCommunityInterface) []*any.Any {
 	return a
 }
 
+// MarshalPrefixSID marshals Prefix SID object into a slice of protobuf's anytype
 func MarshalPrefixSID(psid *prefixsid.PSid) []*any.Any {
 	mtlvs := make([]*any.Any, 0)
 	if psid == nil {
@@ -138,7 +139,7 @@ func MarshalPrefixSID(psid *prefixsid.PSid) []*any.Any {
 	switch {
 	case psid.SRv6L3Service != nil:
 		o := &api.SRv6L3ServiceTLV{}
-		o.SubTlvs = MarshalSRv6SubTLVs(psid.SRv6L3Service.ServiceSubTLVs)
+		o.SubTlvs = MarshalSRv6SubTLVs(psid.SRv6L3Service.SubTLVs)
 		r = o
 	default:
 		return nil
@@ -149,34 +150,26 @@ func MarshalPrefixSID(psid *prefixsid.PSid) []*any.Any {
 	return mtlvs
 }
 
-func MarshalSRv6SubTLVs(tlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api.SRv6TLV {
-	mtlvs := make(map[uint32]*api.SRv6TLV)
+// MarshalSRv6SubTLVs marshals SRv6 SubTLV map into a native protobuf map of TLVs
+func MarshalSRv6SubTLVs(tlvs map[uint8][]srv6.SubTLV) map[uint32]*api.SRv6TLV {
+	mtlvs := make(map[uint32]*api.SRv6TLV, len(tlvs))
 	for t, tlv := range tlvs {
 		var r proto.Message
 		switch t {
 		case 1:
 			for _, stlv := range tlv {
-				m, ok := stlv.Value.(map[string]interface{})
-				if !ok {
-					continue
-				}
-				for k, v := range m {
-					glog.Infof("><SB> k: %+v v: %+v", k, v)
-				}
-
-				istlv, ok := m["key_value"].(*srv6.InformationSubTLV)
+				infoS, ok := stlv.(*srv6.InformationSubTLV)
 				if !ok {
 					continue
 				}
 				o := &api.SRv6InformationSubTLV{
-					EndpointBehavior: uint32(istlv.EndpointBehavior),
-					Flags:            &api.SRv6SIDFlags{},
+					Flags: &api.SRv6SIDFlags{},
 				}
-				o.Sid = make([]byte, len(istlv.SID))
-				copy(o.Sid, istlv.SID)
-				o.SubSubTlvs = MarshalSRv6SubSubTLVs(istlv.SubSubTLV)
-				// SRv6 Information Sub TLV is type 1 Sub TLV
-				glog.Infof("><SB> o: %+v", *o)
+
+				o.EndpointBehavior = uint32(infoS.EndpointBehavior)
+				o.Sid = make([]byte, len(infoS.SID))
+				copy(o.Sid, infoS.SID)
+				o.SubSubTlvs = MarshalSRv6SubSubTLVs(infoS.SubSubTLVs)
 				r = o
 				a, _ := ptypes.MarshalAny(r)
 				tlvs, ok := mtlvs[uint32(t)]
@@ -189,30 +182,33 @@ func MarshalSRv6SubTLVs(tlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api.SRv
 				tlvs.Tlv = append(tlvs.Tlv, a)
 			}
 		default:
-			return nil
+			continue
 		}
 	}
 
 	return mtlvs
 }
 
-func MarshalSRv6SubSubTLVs(stlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api.SRv6TLV {
-	mtlvs := make(map[uint32]*api.SRv6TLV)
+// MarshalSRv6SubSubTLVs marshals SRv6 SubSubTLV map into a native protobuf map of TLVs
+func MarshalSRv6SubSubTLVs(stlvs map[uint8][]srv6.SubSubTLV) map[uint32]*api.SRv6TLV {
+	mtlvs := make(map[uint32]*api.SRv6TLV, len(stlvs))
 	for t, tlv := range stlvs {
 		var r proto.Message
 		switch t {
 		case 1:
 			for _, stlv := range tlv {
-				sstlv := stlv.Value.(*srv6.SIDStructureSubSubTLV)
+				sstlv, ok := stlv.(*srv6.SIDStructureSubSubTLV)
+				if !ok {
+					continue
+				}
 				o := &api.SRv6StructureSubSubTLV{
 					LocalBlockLength:    uint32(sstlv.LocalBlockLength),
-					LocalNodeLength:     uint32(sstlv.LocatorNodeLength),
+					LocalNodeLength:     uint32(sstlv.LocalNodeLength),
 					FunctionLength:      uint32(sstlv.FunctionLength),
 					ArgumentLength:      uint32(sstlv.ArgumentLength),
 					TranspositionLength: uint32(sstlv.TranspositionLength),
 					TranspositionOffset: uint32(sstlv.TranspositionOffset),
 				}
-				// SRv6 Information Sub TLV is type 1 Sub TLV
 				r = o
 				a, _ := ptypes.MarshalAny(r)
 				tlvs, ok := mtlvs[uint32(t)]
@@ -225,9 +221,112 @@ func MarshalSRv6SubSubTLVs(stlvs map[uint8][]srv6.ServiceSubTLV) map[uint32]*api
 				tlvs.Tlv = append(tlvs.Tlv, a)
 			}
 		default:
-			return nil
+			continue
 		}
 	}
 
 	return mtlvs
+}
+
+// UnmarshalPrefixSID unmarshals a slice of protobuf's anytype in Prefix SID object
+func UnmarshalPrefixSID(svcs []*any.Any) (*prefixsid.PSid, error) {
+	psid := &prefixsid.PSid{}
+	for _, svc := range svcs {
+		var svcValue ptypes.DynamicAny
+		if err := ptypes.UnmarshalAny(svc, &svcValue); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal Prefix SID with error: %+v", err)
+		}
+		switch v := svcValue.Message.(type) {
+		case *api.SRv6L3ServiceTLV:
+			if l3, err := UnmarshalSRv6SubTLVs(v.SubTlvs); err == nil {
+				psid.SRv6L3Service = &srv6.L3Service{
+					SubTLVs: l3,
+				}
+			}
+		default:
+			continue
+		}
+	}
+	return psid, nil
+}
+
+// UnmarshalSRv6SubTLVs unmarshals a native protobuf map of TLVs into SRv6 SubTLV map
+func UnmarshalSRv6SubTLVs(stlvs map[uint32]*api.SRv6TLV) (map[uint8][]srv6.SubTLV, error) {
+	var err error
+	mtlvs := make(map[uint8][]srv6.SubTLV, len(stlvs))
+	for t, tlv := range stlvs {
+		switch t {
+		case 1:
+			for _, stlv := range tlv.Tlv {
+				var stlvValue ptypes.DynamicAny
+				o := &srv6.InformationSubTLV{}
+				if err := ptypes.UnmarshalAny(stlv, &stlvValue); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal SRv6 SID Structure Sub Sub TLV with error: %+v", err)
+				}
+				v, ok := stlvValue.Message.(*api.SRv6InformationSubTLV)
+				if !ok {
+					continue
+				}
+				o.EndpointBehavior = uint16(v.EndpointBehavior)
+				// TODO Once Flags are finalized in RFC, populate its value
+				o.Flags = 0
+				o.SID = string(v.Sid)
+				o.SubSubTLVs, err = UnmarshalSRv6SubSubTLVs(v.SubSubTlvs)
+				if err != nil {
+					continue
+				}
+				var e srv6.SubSubTLV
+				e = o
+				stlvs, ok := mtlvs[uint8(t)]
+				if !ok {
+					stlvs = make([]srv6.SubTLV, 0)
+				}
+				stlvs = append(stlvs, e)
+				mtlvs[uint8(t)] = stlvs
+			}
+		default:
+			continue
+		}
+	}
+
+	return mtlvs, nil
+}
+
+// UnmarshalSRv6SubSubTLVs unmarshals a native protobuf map of TLVs into SRv6 SubSubTLV map
+func UnmarshalSRv6SubSubTLVs(stlvs map[uint32]*api.SRv6TLV) (map[uint8][]srv6.SubSubTLV, error) {
+	mtlvs := make(map[uint8][]srv6.SubSubTLV, len(stlvs))
+	for t, tlv := range stlvs {
+		switch t {
+		case 1:
+			for _, sstlv := range tlv.Tlv {
+				var sstlvValue ptypes.DynamicAny
+				o := &srv6.SIDStructureSubSubTLV{}
+				if err := ptypes.UnmarshalAny(sstlv, &sstlvValue); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal SRv6 SID Structure Sub Sub TLV with error: %+v", err)
+				}
+				v, ok := sstlvValue.Message.(*api.SRv6StructureSubSubTLV)
+				if !ok {
+					continue
+				}
+				o.LocalBlockLength = uint8(v.LocalBlockLength)
+				o.LocalNodeLength = uint8(v.LocalNodeLength)
+				o.FunctionLength = uint8(v.FunctionLength)
+				o.ArgumentLength = uint8(v.ArgumentLength)
+				o.TranspositionLength = uint8(v.TranspositionLength)
+				o.TranspositionOffset = uint8(v.TranspositionOffset)
+				var e srv6.SubSubTLV
+				e = o
+				sstlvs, ok := mtlvs[uint8(t)]
+				if !ok {
+					sstlvs = make([]srv6.SubSubTLV, 0)
+				}
+				sstlvs = append(sstlvs, e)
+				mtlvs[uint8(t)] = sstlvs
+			}
+		default:
+			continue
+		}
+	}
+
+	return mtlvs, nil
 }
