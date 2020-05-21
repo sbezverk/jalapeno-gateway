@@ -38,7 +38,7 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	if req.VpnPrefix != nil {
 		addr = net.IP(req.VpnPrefix.Address).String()
 		mask = int(req.VpnPrefix.MaskLength)
-		glog.V(5).Infof("L3VPN request for prefix: %s/%d", addr, mask)
+		glog.V(5).Infof("SRv6 L3 request for prefix: %s/%d", addr, mask)
 	}
 	glog.V(5).Infof("SRv6 L3 request for RD: %s", rd.String())
 	rq := dbclient.NewL3VpnReq(rd.String(), nil, req.Ipv4, addr, uint32(mask))

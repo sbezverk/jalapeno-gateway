@@ -102,20 +102,21 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 }
 
 func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.SRv6L3VpnResp, error) {
-	glog.V(5).Infof("Mock DB SRv6 VPN Service was called with the request: %+v", req)
-
-	// Initial lookup for requested RD, if it is not in the store, return error
+	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for RD: %s", req.RD)
+	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
+	resp := dbclient.SRv6L3VpnResp{
+		Prefix: srv6Prefix,
+	}
+	// Initial lookup for requested RD, if it is not in the store, return an empty response
 	records, ok := m.srv6Store[req.RD]
 	if !ok {
-		return nil, fmt.Errorf("RD %s is not found", req.RD)
+		return &resp, nil
 	}
-
+	// All filtered, return an empty response
 	if len(records) == 0 {
-		// All filtered, returning error
-		return nil, fmt.Errorf("no matching records to found")
+		return &resp, nil
 	}
 
-	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
 	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
 		p := &pbapi.SRv6L3Prefix{
@@ -133,9 +134,7 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
 		srv6Prefix = append(srv6Prefix, p)
 	}
-	resp := dbclient.SRv6L3VpnResp{
-		Prefix: srv6Prefix,
-	}
+	resp.Prefix = srv6Prefix
 
 	return &resp, nil
 }
