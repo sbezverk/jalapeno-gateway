@@ -1,382 +1,134 @@
 [
     {
-      "_key": "172.24.9.0_101:101_10.0.0.9",
-      "_id": "L3VPN_Topology/172.24.9.0_101:101_10.0.0.9",
-      "_from": "L3VPPrefix/172.24.9.0",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFHS--_",
-      "SrcIP": "172.24.9.0",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "172.24.9.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24000,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": true,
-      "Source": "172.24.9.0",
-      "Destination": "10.0.0.9"
+      "base_attrs": {
+        "ext_community_list": "rt=5:65003"
+      },
+      "prefix": "192.168.5.1",
+      "prefix_len": 32,
+      "is_ipv4": true,
+      "origin_as": "65003",
+      "nexthop": "192:168:5::3",
+      "is_nexthop_ipv4": false,
+      "labels": [
+        1040
+      ],
+      "vpn_rd": "100:100",
+      "vpn_rd_type": 0,
+      "prefix_sid": {
+        "srv6_l3_service": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:3::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
     },
     {
-      "_key": "10.0.0.9_101:101_172.24.9.0",
-      "_id": "L3VPN_Topology/10.0.0.9_101:101_172.24.9.0",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/172.24.9.0",
-      "_rev": "_aTuQFHq--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "172.24.9.0",
-      "VPN_Prefix": "172.24.9.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24000,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": true,
-      "Source": "10.0.0.9",
-      "Destination": "172.24.9.0"
+      "base_attrs": {
+        "ext_community_list": "rt=5:65004"
+      },
+      "prefix": "192.168.5.4",
+      "prefix_len": 32,
+      "is_ipv4": true,
+      "origin_as": "65004",
+      "nexthop": "192:168:5::4",
+      "is_nexthop_ipv4": false,
+      "labels": [
+        1040
+      ],
+      "vpn_rd": "100:100",
+      "vpn_rd_type": 0,
+      "prefix_sid": {
+        "srv6_l3_service": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
     },
     {
-      "_key": "172.23.9.0_101:101_10.0.0.9",
-      "_id": "L3VPN_Topology/172.23.9.0_101:101_10.0.0.9",
-      "_from": "L3VPPrefix/172.23.9.0",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFIS--_",
-      "SrcIP": "172.23.9.0",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "172.23.9.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24000,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": true,
-      "Source": "172.23.9.0",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_101:101_172.23.9.0",
-      "_id": "L3VPN_Topology/10.0.0.9_101:101_172.23.9.0",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/172.23.9.0",
-      "_rev": "_aTuQFIu--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "172.23.9.0",
-      "VPN_Prefix": "172.23.9.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24000,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": true,
-      "Source": "10.0.0.9",
-      "Destination": "172.23.9.0"
-    },
-    {
-      "_key": "10.9.8.0_102:102_10.0.0.9",
-      "_id": "L3VPN_Topology/10.9.8.0_102:102_10.0.0.9",
-      "_from": "L3VPPrefix/10.9.8.0",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFJW--_",
-      "SrcIP": "10.9.8.0",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10.9.8.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24001,
-      "RD": "102:102",
-      "RT": "102:102",
-      "IPv4": true,
-      "Source": "10.9.8.0",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_102:102_10.9.8.0",
-      "_id": "L3VPN_Topology/10.0.0.9_102:102_10.9.8.0",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10.9.8.0",
-      "_rev": "_aTuQFJy--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10.9.8.0",
-      "VPN_Prefix": "10.9.8.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24001,
-      "RD": "102:102",
-      "RT": "102:102",
-      "IPv4": true,
-      "Source": "10.0.0.9",
-      "Destination": "10.9.8.0"
-    },
-    {
-      "_key": "10.7.6.0_103:103_10.0.0.9",
-      "_id": "L3VPN_Topology/10.7.6.0_103:103_10.0.0.9",
-      "_from": "L3VPPrefix/10.7.6.0",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFKW--_",
-      "SrcIP": "10.7.6.0",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10.7.6.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24002,
-      "RD": "103:103",
-      "RT": "103:103",
-      "IPv4": true,
-      "Source": "10.7.6.0",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_103:103_10.7.6.0",
-      "_id": "L3VPN_Topology/10.0.0.9_103:103_10.7.6.0",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10.7.6.0",
-      "_rev": "_aTuQFKy--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10.7.6.0",
-      "VPN_Prefix": "10.7.6.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24002,
-      "RD": "103:103",
-      "RT": "103:103",
-      "IPv4": true,
-      "Source": "10.0.0.9",
-      "Destination": "10.7.6.0"
-    },
-    {
-      "_key": "10.7.6.0_104:104_10.0.0.9",
-      "_id": "L3VPN_Topology/10.7.6.0_104:104_10.0.0.9",
-      "_from": "L3VPPrefix/10.7.6.0",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFLa--_",
-      "SrcIP": "10.7.6.0",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10.7.6.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24003,
-      "RD": "104:104",
-      "RT": "104:104",
-      "IPv4": true,
-      "Source": "10.7.6.0",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_104:104_10.7.6.0",
-      "_id": "L3VPN_Topology/10.0.0.9_104:104_10.7.6.0",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10.7.6.0",
-      "_rev": "_aTuQFL2--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10.7.6.0",
-      "VPN_Prefix": "10.7.6.0",
-      "VPN_Prefix_Len": 24,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24003,
-      "RD": "104:104",
-      "RT": "104:104",
-      "IPv4": true,
-      "Source": "10.0.0.9",
-      "Destination": "10.7.6.0"
-    },
-    {
-      "_key": "172:24:9:abcd::_101:101_10.0.0.9",
-      "_id": "L3VPN_Topology/172:24:9:abcd::_101:101_10.0.0.9",
-      "_from": "L3VPPrefix/172:24:9:abcd::",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFNy--_",
-      "SrcIP": "172:24:9:abcd::",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "172:24:9:abcd::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24004,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": false,
-      "Source": "172:24:9:abcd::",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_101:101_172:24:9:abcd::",
-      "_id": "L3VPN_Topology/10.0.0.9_101:101_172:24:9:abcd::",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/172:24:9:abcd::",
-      "_rev": "_aTuQFOO--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "172:24:9:abcd::",
-      "VPN_Prefix": "172:24:9:abcd::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24004,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": false,
-      "Source": "10.0.0.9",
-      "Destination": "172:24:9:abcd::"
-    },
-    {
-      "_key": "172:23:9:abcd::_101:101_10.0.0.9",
-      "_id": "L3VPN_Topology/172:23:9:abcd::_101:101_10.0.0.9",
-      "_from": "L3VPPrefix/172:23:9:abcd::",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFO2--_",
-      "SrcIP": "172:23:9:abcd::",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "172:23:9:abcd::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24004,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": false,
-      "Source": "172:23:9:abcd::",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_101:101_172:23:9:abcd::",
-      "_id": "L3VPN_Topology/10.0.0.9_101:101_172:23:9:abcd::",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/172:23:9:abcd::",
-      "_rev": "_aTuQFPO--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "172:23:9:abcd::",
-      "VPN_Prefix": "172:23:9:abcd::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24004,
-      "RD": "101:101",
-      "RT": "101:101",
-      "IPv4": false,
-      "Source": "10.0.0.9",
-      "Destination": "172:23:9:abcd::"
-    },
-    {
-      "_key": "10:9:8::_102:102_10.0.0.9",
-      "_id": "L3VPN_Topology/10:9:8::_102:102_10.0.0.9",
-      "_from": "L3VPPrefix/10:9:8::",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFQC--_",
-      "SrcIP": "10:9:8::",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10:9:8::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24005,
-      "RD": "102:102",
-      "RT": "102:102",
-      "IPv4": false,
-      "Source": "10:9:8::",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_102:102_10:9:8::",
-      "_id": "L3VPN_Topology/10.0.0.9_102:102_10:9:8::",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10:9:8::",
-      "_rev": "_aTuQFQe--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10:9:8::",
-      "VPN_Prefix": "10:9:8::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24005,
-      "RD": "102:102",
-      "RT": "102:102",
-      "IPv4": false,
-      "Source": "10.0.0.9",
-      "Destination": "10:9:8::"
-    },
-    {
-      "_key": "10:7:6::_103:103_10.0.0.9",
-      "_id": "L3VPN_Topology/10:7:6::_103:103_10.0.0.9",
-      "_from": "L3VPPrefix/10:7:6::",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFRG--_",
-      "SrcIP": "10:7:6::",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10:7:6::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24006,
-      "RD": "103:103",
-      "RT": "103:103",
-      "IPv4": false,
-      "Source": "10:7:6::",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_103:103_10:7:6::",
-      "_id": "L3VPN_Topology/10.0.0.9_103:103_10:7:6::",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10:7:6::",
-      "_rev": "_aTuQFRm--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10:7:6::",
-      "VPN_Prefix": "10:7:6::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24006,
-      "RD": "103:103",
-      "RT": "103:103",
-      "IPv4": false,
-      "Source": "10.0.0.9",
-      "Destination": "10:7:6::"
-    },
-    {
-      "_key": "10:7:6::_104:104_10.0.0.9",
-      "_id": "L3VPN_Topology/10:7:6::_104:104_10.0.0.9",
-      "_from": "L3VPPrefix/10:7:6::",
-      "_to": "L3VPNNode/10.0.0.9",
-      "_rev": "_aTuQFSK--_",
-      "SrcIP": "10:7:6::",
-      "DstIP": "10.0.0.9",
-      "VPN_Prefix": "10:7:6::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24007,
-      "RD": "104:104",
-      "RT": "104:104",
-      "IPv4": false,
-      "Source": "10:7:6::",
-      "Destination": "10.0.0.9"
-    },
-    {
-      "_key": "10.0.0.9_104:104_10:7:6::",
-      "_id": "L3VPN_Topology/10.0.0.9_104:104_10:7:6::",
-      "_from": "L3VPNode/10.0.0.9",
-      "_to": "L3VPNPrefix/10:7:6::",
-      "_rev": "_aTuQFTC--_",
-      "SrcIP": "10.0.0.9",
-      "DstIP": "10:7:6::",
-      "VPN_Prefix": "10:7:6::",
-      "VPN_Prefix_Len": 96,
-      "RouterID": "10.0.0.9",
-      "PrefixSID": 100009,
-      "VPN_Label": 24007,
-      "RD": "104:104",
-      "RT": "104:104",
-      "IPv4": false,
-      "Source": "10.0.0.9",
-      "Destination": "10:7:6::"
+      "base_attrs": {
+        "ext_community_list": "rt=5:65004"
+      },
+      "prefix": "192.168.5.2",
+      "prefix_len": 32,
+      "is_ipv4": true,
+      "origin_as": "65004",
+      "nexthop": "192:168:5::4",
+      "is_nexthop_ipv4": false,
+      "labels": [
+        1040
+      ],
+      "vpn_rd": "101:101",
+      "vpn_rd_type": 0,
+      "prefix_sid": {
+        "srv6_l3_service": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              },
+              {
+                "sid": "2001:0:5:41::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
     }
   ]

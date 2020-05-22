@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package apis;
+
+// Errors defines error codes which a gateway can return to a client
+enum GatewayError {
+  OK = 0;
+  // Returned when a gateway encountered a generic error
+  EIO = 1;
+  // Returned when request key does not exist
+  ENOENT = 2;
+  // Returned when an operation triggered by the client's requested timed out
+  // and was canceled
+  ETIMEDOUT = 3;
+  // Returned when a gateway cannot reach a DB host
+  EHOSTDOWN = 4;
+}
+
+message Prefix {
+  bytes address = 1;
+  uint32 mask_length = 2;
+}

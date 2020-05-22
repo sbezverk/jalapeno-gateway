@@ -6,14 +6,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/sbezverk/gobmp/pkg/bgp"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 )
 
-// Record represents the database record structure
-type Record struct {
+// MPLSL3Record represents the database record structure
+type MPLSL3Record struct {
 	Key             string `json:"_key,omitempty"`
 	ID              string `json:"_id,omitempty"`
 	From            string `json:"_from,omitempty"`
@@ -24,7 +29,6 @@ type Record struct {
 	Prefix          string `json:"VPN_Prefix,omitempty"`
 	Mask            uint32 `json:"VPN_Prefix_Len,omitempty"`
 	RouterID        string `json:"RouterID,omitempty"`
-	PrefixSID       uint32 `json:"PrefixSID,omitempty"`
 	VPN             uint32 `json:"VPN_Label,omitempty"`
 	RD              string `json:"RD"`
 	IPv4            bool   `json:"IPv4,omitempty"`
@@ -33,11 +37,27 @@ type Record struct {
 	Destination     string `json:"Destination,omitempty"`
 }
 
-type mockSrv struct {
-	vpnStore map[string][]Record
+// SRv6L3Record represents the database record structure
+type SRv6L3Record struct {
+	BaseAttributes *bgp.BaseAttributes `json:"base_attrs,omitempty"`
+	Prefix         string              `json:"prefix,omitempty"`
+	PrefixLen      int32               `json:"prefix_len,omitempty"`
+	IsIPv4         bool                `json:"is_ipv4"`
+	OriginAS       string              `json:"origin_as,omitempty"`
+	Nexthop        string              `json:"nexthop,omitempty"`
+	IsNexthopIPv4  bool                `json:"is_nexthop_ipv4"`
+	Labels         []uint32            `json:"labels,omitempty"`
+	VPNRD          string              `json:"vpn_rd,omitempty"`
+	VPNRDType      uint16              `json:"vpn_rd_type"`
+	PrefixSID      *prefixsid.PSid     `json:"prefix_sid,omitempty"`
 }
 
-func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.L3VpnResp, error) {
+type mockSrv struct {
+	vpnStore  map[string][]MPLSL3Record
+	srv6Store map[string][]SRv6L3Record
+}
+
+func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.MPLSL3VpnResp, error) {
 	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
 
 	// Initial lookup for requested RD, if it is not in the store, return error
@@ -63,19 +83,58 @@ func (m *mockSrv) L3VPNRequest(ctx context.Context, req *dbclient.L3VpnReq) (*db
 		return nil, fmt.Errorf("no matching records to found")
 	}
 
-	vpnPrefix := make([]dbclient.L3VPNPrefix, 0)
+	vpnPrefix := make([]*pbapi.MPLSL3Prefix, 0)
 	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
-		vpnPrefix = append(vpnPrefix, dbclient.L3VPNPrefix{
-			Prefix:     r.Prefix,
-			MaskLength: r.Mask,
-			VpnLabel:   r.VPN,
-			SidLabel:   r.PrefixSID,
+		vpnPrefix = append(vpnPrefix, &pbapi.MPLSL3Prefix{
+			Prefix: &pbapi.Prefix{
+				Address:    []byte(r.Prefix),
+				MaskLength: r.Mask,
+			},
+			VpnLabel: r.VPN,
 		})
 	}
-	resp := dbclient.L3VpnResp{
+	resp := dbclient.MPLSL3VpnResp{
 		Prefix: vpnPrefix,
 	}
+
+	return &resp, nil
+}
+
+func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.SRv6L3VpnResp, error) {
+	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for RD: %s", req.RD)
+	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
+	resp := dbclient.SRv6L3VpnResp{
+		Prefix: srv6Prefix,
+	}
+	// Initial lookup for requested RD, if it is not in the store, return an empty response
+	records, ok := m.srv6Store[req.RD]
+	if !ok {
+		return &resp, nil
+	}
+	// All filtered, return an empty response
+	if len(records) == 0 {
+		return &resp, nil
+	}
+
+	glog.Infof("number of prefixes retrieved: %d", len(records))
+	for _, r := range records {
+		p := &pbapi.SRv6L3Prefix{
+			Prefix: &pbapi.Prefix{
+				Address:    []byte(r.Prefix),
+				MaskLength: uint32(r.PrefixLen),
+			},
+			Label:     int32(r.Labels[0]),
+			NhAddress: []byte(r.Nexthop),
+			PrefixSid: &pbapi.PrefixSID{},
+		}
+		if asn, err := strconv.Atoi(r.OriginAS); err == nil {
+			p.Asn = uint32(asn)
+		}
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
+		srv6Prefix = append(srv6Prefix, p)
+	}
+	resp.Prefix = srv6Prefix
 
 	return &resp, nil
 }
@@ -93,8 +152,8 @@ func (m *mockSrv) Validator(addr string) error {
 	return nil
 }
 
-func filterByIPFamily(ipv4 bool, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByIPFamily(ipv4 bool, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	for _, r := range records {
 		if r.IPv4 == ipv4 {
 			result = append(result, r)
@@ -103,8 +162,8 @@ func filterByIPFamily(ipv4 bool, records []Record) []Record {
 
 	return result
 }
-func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByPrefix(prefix string, mask uint32, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	for _, r := range records {
 		if r.Prefix == prefix && r.Mask == mask {
 			result = append(result, r)
@@ -116,8 +175,8 @@ func filterByPrefix(prefix string, mask uint32, records []Record) []Record {
 	return result
 }
 
-func filterByRT(rts []string, records []Record) []Record {
-	result := make([]Record, 0)
+func filterByRT(rts []string, records []MPLSL3Record) []MPLSL3Record {
+	result := make([]MPLSL3Record, 0)
 	match := 0
 	for _, r := range records {
 		for _, rrt := range strings.Split(r.RT, ",") {
@@ -139,7 +198,7 @@ func filterByRT(rts []string, records []Record) []Record {
 }
 
 // NewMockDBClient returns an instance of a new mock database client process
-func NewMockDBClient(fn ...string) dbclient.DBClient {
+func NewMockDBClient(mpls bool, fn ...string) dbclient.DBClient {
 	// Need to load test data
 	tfn := "./testdata.json"
 	if fn[0] != "" {
@@ -161,20 +220,37 @@ func NewMockDBClient(fn ...string) dbclient.DBClient {
 		glog.Errorf("failed to read testdata.json with error: %+v", err)
 		return nil
 	}
-	records := make([]Record, 0)
-	if err := json.Unmarshal(b, &records); err != nil {
-		glog.Errorf("failed to unmarshal testdata with error: %+v", err)
-		return nil
-	}
-
+	vpn := make([]MPLSL3Record, 0)
+	srv6 := make([]SRv6L3Record, 0)
 	ds := mockSrv{
-		vpnStore: make(map[string][]Record, 0),
+		vpnStore:  make(map[string][]MPLSL3Record),
+		srv6Store: make(map[string][]SRv6L3Record),
 	}
-	for _, r := range records {
-		if _, ok := ds.vpnStore[r.RD]; !ok {
-			ds.vpnStore[r.RD] = make([]Record, 0)
+	if mpls {
+		if err := json.Unmarshal(b, &vpn); err != nil {
+			glog.Errorf("failed to unmarshal testdata with error: %+v", err)
+			return nil
 		}
-		ds.vpnStore[r.RD] = append(ds.vpnStore[r.RD], r)
+	} else {
+		if err := json.Unmarshal(b, &srv6); err != nil {
+			glog.Errorf("failed to unmarshal testdata with error: %+v", err)
+			return nil
+		}
+	}
+	if mpls {
+		for _, r := range vpn {
+			if _, ok := ds.vpnStore[r.RD]; !ok {
+				ds.vpnStore[r.RD] = make([]MPLSL3Record, 0)
+			}
+			ds.vpnStore[r.RD] = append(ds.vpnStore[r.RD], r)
+		}
+	} else {
+		for _, r := range srv6 {
+			if _, ok := ds.srv6Store[r.VPNRD]; !ok {
+				ds.srv6Store[r.VPNRD] = make([]SRv6L3Record, 0)
+			}
+			ds.srv6Store[r.VPNRD] = append(ds.srv6Store[r.VPNRD], r)
+		}
 	}
 
 	return &ds

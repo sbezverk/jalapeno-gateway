@@ -26,857 +26,242 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// Errors defines error codes which a gateway can return to a client
-type GatewayErrors int32
-
-const (
-	GatewayErrors_OK GatewayErrors = 0
-	// Returned when a gateway encountered a generic error
-	GatewayErrors_EIO GatewayErrors = 1
-	// Returned when request key does not exist
-	GatewayErrors_ENOENT GatewayErrors = 2
-	// Returned when an operation triggered by the client's requested timed out
-	// and was canceled
-	GatewayErrors_ETIMEDOUT GatewayErrors = 3
-	// Returned when a gateway cannot reach a DB host
-	GatewayErrors_EHOSTDOWN GatewayErrors = 4
-)
-
-var GatewayErrors_name = map[int32]string{
-	0: "OK",
-	1: "EIO",
-	2: "ENOENT",
-	3: "ETIMEDOUT",
-	4: "EHOSTDOWN",
-}
-
-var GatewayErrors_value = map[string]int32{
-	"OK":        0,
-	"EIO":       1,
-	"ENOENT":    2,
-	"ETIMEDOUT": 3,
-	"EHOSTDOWN": 4,
-}
-
-func (x GatewayErrors) String() string {
-	return proto.EnumName(GatewayErrors_name, int32(x))
-}
-
-func (GatewayErrors) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{0}
-}
-
-type RouteDistinguisherTwoOctetAS struct {
-	Admin                uint32   `protobuf:"varint,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	Assigned             uint32   `protobuf:"varint,2,opt,name=assigned,proto3" json:"assigned,omitempty"`
+// L3VpnRequest defines a structure of a request for the prefixes
+// which belons to a specific VPN, identified by the route distingusiher.
+// Further selection criteria includes: family ipv6/ipv6, a list of route
+// targets or a specific vpn prefix.
+type L3VpnRequest struct {
+	// id is a unique identificator of a gateway client.
+	Id []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// RD identifies the vpn route distinguisher, it is a mandatory parameter
+	Rd *any.Any `protobuf:"bytes,2,opt,name=rd,proto3" json:"rd,omitempty"`
+	// Identifies if request sent for ipv4 prefixes in this case this field should
+	// be set to true or ipv6, in this case this field should be set to false.
+	Ipv4 bool `protobuf:"varint,3,opt,name=ipv4,proto3" json:"ipv4,omitempty"`
+	// Route Targets is optional filtering parameter.
+	Rt []*any.Any `protobuf:"bytes,4,rep,name=rt,proto3" json:"rt,omitempty"`
+	// Prefix is optional filtering parameter.
+	VpnPrefix            *Prefix  `protobuf:"bytes,5,opt,name=vpn_prefix,json=vpnPrefix,proto3" json:"vpn_prefix,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *RouteDistinguisherTwoOctetAS) Reset()         { *m = RouteDistinguisherTwoOctetAS{} }
-func (m *RouteDistinguisherTwoOctetAS) String() string { return proto.CompactTextString(m) }
-func (*RouteDistinguisherTwoOctetAS) ProtoMessage()    {}
-func (*RouteDistinguisherTwoOctetAS) Descriptor() ([]byte, []int) {
+func (m *L3VpnRequest) Reset()         { *m = L3VpnRequest{} }
+func (m *L3VpnRequest) String() string { return proto.CompactTextString(m) }
+func (*L3VpnRequest) ProtoMessage()    {}
+func (*L3VpnRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4982045cb0164b85, []int{0}
 }
 
-func (m *RouteDistinguisherTwoOctetAS) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_RouteDistinguisherTwoOctetAS.Unmarshal(m, b)
+func (m *L3VpnRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_L3VpnRequest.Unmarshal(m, b)
 }
-func (m *RouteDistinguisherTwoOctetAS) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_RouteDistinguisherTwoOctetAS.Marshal(b, m, deterministic)
+func (m *L3VpnRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_L3VpnRequest.Marshal(b, m, deterministic)
 }
-func (m *RouteDistinguisherTwoOctetAS) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RouteDistinguisherTwoOctetAS.Merge(m, src)
+func (m *L3VpnRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_L3VpnRequest.Merge(m, src)
 }
-func (m *RouteDistinguisherTwoOctetAS) XXX_Size() int {
-	return xxx_messageInfo_RouteDistinguisherTwoOctetAS.Size(m)
+func (m *L3VpnRequest) XXX_Size() int {
+	return xxx_messageInfo_L3VpnRequest.Size(m)
 }
-func (m *RouteDistinguisherTwoOctetAS) XXX_DiscardUnknown() {
-	xxx_messageInfo_RouteDistinguisherTwoOctetAS.DiscardUnknown(m)
+func (m *L3VpnRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_L3VpnRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RouteDistinguisherTwoOctetAS proto.InternalMessageInfo
+var xxx_messageInfo_L3VpnRequest proto.InternalMessageInfo
 
-func (m *RouteDistinguisherTwoOctetAS) GetAdmin() uint32 {
+func (m *L3VpnRequest) GetId() []byte {
 	if m != nil {
-		return m.Admin
+		return m.Id
 	}
-	return 0
+	return nil
 }
 
-func (m *RouteDistinguisherTwoOctetAS) GetAssigned() uint32 {
+func (m *L3VpnRequest) GetRd() *any.Any {
 	if m != nil {
-		return m.Assigned
+		return m.Rd
 	}
-	return 0
+	return nil
 }
 
-type RouteDistinguisherIPAddress struct {
-	Admin                string   `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	Assigned             uint32   `protobuf:"varint,2,opt,name=assigned,proto3" json:"assigned,omitempty"`
+func (m *L3VpnRequest) GetIpv4() bool {
+	if m != nil {
+		return m.Ipv4
+	}
+	return false
+}
+
+func (m *L3VpnRequest) GetRt() []*any.Any {
+	if m != nil {
+		return m.Rt
+	}
+	return nil
+}
+
+func (m *L3VpnRequest) GetVpnPrefix() *Prefix {
+	if m != nil {
+		return m.VpnPrefix
+	}
+	return nil
+}
+
+type Client struct {
+	// id is a unique identificator of a gateway client.
+	Id                   []byte   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *RouteDistinguisherIPAddress) Reset()         { *m = RouteDistinguisherIPAddress{} }
-func (m *RouteDistinguisherIPAddress) String() string { return proto.CompactTextString(m) }
-func (*RouteDistinguisherIPAddress) ProtoMessage()    {}
-func (*RouteDistinguisherIPAddress) Descriptor() ([]byte, []int) {
+func (m *Client) Reset()         { *m = Client{} }
+func (m *Client) String() string { return proto.CompactTextString(m) }
+func (*Client) ProtoMessage()    {}
+func (*Client) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4982045cb0164b85, []int{1}
 }
 
-func (m *RouteDistinguisherIPAddress) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_RouteDistinguisherIPAddress.Unmarshal(m, b)
+func (m *Client) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Client.Unmarshal(m, b)
 }
-func (m *RouteDistinguisherIPAddress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_RouteDistinguisherIPAddress.Marshal(b, m, deterministic)
+func (m *Client) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Client.Marshal(b, m, deterministic)
 }
-func (m *RouteDistinguisherIPAddress) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RouteDistinguisherIPAddress.Merge(m, src)
+func (m *Client) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Client.Merge(m, src)
 }
-func (m *RouteDistinguisherIPAddress) XXX_Size() int {
-	return xxx_messageInfo_RouteDistinguisherIPAddress.Size(m)
+func (m *Client) XXX_Size() int {
+	return xxx_messageInfo_Client.Size(m)
 }
-func (m *RouteDistinguisherIPAddress) XXX_DiscardUnknown() {
-	xxx_messageInfo_RouteDistinguisherIPAddress.DiscardUnknown(m)
+func (m *Client) XXX_DiscardUnknown() {
+	xxx_messageInfo_Client.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RouteDistinguisherIPAddress proto.InternalMessageInfo
+var xxx_messageInfo_Client proto.InternalMessageInfo
 
-func (m *RouteDistinguisherIPAddress) GetAdmin() string {
+func (m *Client) GetId() []byte {
 	if m != nil {
-		return m.Admin
+		return m.Id
 	}
-	return ""
+	return nil
 }
 
-func (m *RouteDistinguisherIPAddress) GetAssigned() uint32 {
-	if m != nil {
-		return m.Assigned
-	}
-	return 0
+type SRv6L3Response struct {
+	Srv6Prefix           []*SRv6L3Prefix `protobuf:"bytes,1,rep,name=srv6_prefix,json=srv6Prefix,proto3" json:"srv6_prefix,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
 }
 
-type RouteDistinguisherFourOctetAS struct {
-	Admin                uint32   `protobuf:"varint,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	Assigned             uint32   `protobuf:"varint,2,opt,name=assigned,proto3" json:"assigned,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *RouteDistinguisherFourOctetAS) Reset()         { *m = RouteDistinguisherFourOctetAS{} }
-func (m *RouteDistinguisherFourOctetAS) String() string { return proto.CompactTextString(m) }
-func (*RouteDistinguisherFourOctetAS) ProtoMessage()    {}
-func (*RouteDistinguisherFourOctetAS) Descriptor() ([]byte, []int) {
+func (m *SRv6L3Response) Reset()         { *m = SRv6L3Response{} }
+func (m *SRv6L3Response) String() string { return proto.CompactTextString(m) }
+func (*SRv6L3Response) ProtoMessage()    {}
+func (*SRv6L3Response) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4982045cb0164b85, []int{2}
 }
 
-func (m *RouteDistinguisherFourOctetAS) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_RouteDistinguisherFourOctetAS.Unmarshal(m, b)
+func (m *SRv6L3Response) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRv6L3Response.Unmarshal(m, b)
 }
-func (m *RouteDistinguisherFourOctetAS) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_RouteDistinguisherFourOctetAS.Marshal(b, m, deterministic)
+func (m *SRv6L3Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRv6L3Response.Marshal(b, m, deterministic)
 }
-func (m *RouteDistinguisherFourOctetAS) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RouteDistinguisherFourOctetAS.Merge(m, src)
+func (m *SRv6L3Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRv6L3Response.Merge(m, src)
 }
-func (m *RouteDistinguisherFourOctetAS) XXX_Size() int {
-	return xxx_messageInfo_RouteDistinguisherFourOctetAS.Size(m)
+func (m *SRv6L3Response) XXX_Size() int {
+	return xxx_messageInfo_SRv6L3Response.Size(m)
 }
-func (m *RouteDistinguisherFourOctetAS) XXX_DiscardUnknown() {
-	xxx_messageInfo_RouteDistinguisherFourOctetAS.DiscardUnknown(m)
+func (m *SRv6L3Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRv6L3Response.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RouteDistinguisherFourOctetAS proto.InternalMessageInfo
+var xxx_messageInfo_SRv6L3Response proto.InternalMessageInfo
 
-func (m *RouteDistinguisherFourOctetAS) GetAdmin() uint32 {
+func (m *SRv6L3Response) GetSrv6Prefix() []*SRv6L3Prefix {
 	if m != nil {
-		return m.Admin
+		return m.Srv6Prefix
 	}
-	return 0
+	return nil
 }
 
-func (m *RouteDistinguisherFourOctetAS) GetAssigned() uint32 {
-	if m != nil {
-		return m.Assigned
-	}
-	return 0
+type MPLSL3Response struct {
+	MplsPrefix           []*MPLSL3Prefix `protobuf:"bytes,1,rep,name=mpls_prefix,json=mplsPrefix,proto3" json:"mpls_prefix,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
 }
 
-type TwoOctetAsSpecificExtended struct {
-	IsTransitive         bool     `protobuf:"varint,1,opt,name=is_transitive,json=isTransitive,proto3" json:"is_transitive,omitempty"`
-	SubType              uint32   `protobuf:"varint,2,opt,name=sub_type,json=subType,proto3" json:"sub_type,omitempty"`
-	As                   uint32   `protobuf:"varint,3,opt,name=as,proto3" json:"as,omitempty"`
-	LocalAdmin           uint32   `protobuf:"varint,4,opt,name=local_admin,json=localAdmin,proto3" json:"local_admin,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *TwoOctetAsSpecificExtended) Reset()         { *m = TwoOctetAsSpecificExtended{} }
-func (m *TwoOctetAsSpecificExtended) String() string { return proto.CompactTextString(m) }
-func (*TwoOctetAsSpecificExtended) ProtoMessage()    {}
-func (*TwoOctetAsSpecificExtended) Descriptor() ([]byte, []int) {
+func (m *MPLSL3Response) Reset()         { *m = MPLSL3Response{} }
+func (m *MPLSL3Response) String() string { return proto.CompactTextString(m) }
+func (*MPLSL3Response) ProtoMessage()    {}
+func (*MPLSL3Response) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4982045cb0164b85, []int{3}
 }
 
-func (m *TwoOctetAsSpecificExtended) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TwoOctetAsSpecificExtended.Unmarshal(m, b)
+func (m *MPLSL3Response) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MPLSL3Response.Unmarshal(m, b)
 }
-func (m *TwoOctetAsSpecificExtended) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TwoOctetAsSpecificExtended.Marshal(b, m, deterministic)
+func (m *MPLSL3Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MPLSL3Response.Marshal(b, m, deterministic)
 }
-func (m *TwoOctetAsSpecificExtended) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TwoOctetAsSpecificExtended.Merge(m, src)
+func (m *MPLSL3Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MPLSL3Response.Merge(m, src)
 }
-func (m *TwoOctetAsSpecificExtended) XXX_Size() int {
-	return xxx_messageInfo_TwoOctetAsSpecificExtended.Size(m)
+func (m *MPLSL3Response) XXX_Size() int {
+	return xxx_messageInfo_MPLSL3Response.Size(m)
 }
-func (m *TwoOctetAsSpecificExtended) XXX_DiscardUnknown() {
-	xxx_messageInfo_TwoOctetAsSpecificExtended.DiscardUnknown(m)
+func (m *MPLSL3Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_MPLSL3Response.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_TwoOctetAsSpecificExtended proto.InternalMessageInfo
+var xxx_messageInfo_MPLSL3Response proto.InternalMessageInfo
 
-func (m *TwoOctetAsSpecificExtended) GetIsTransitive() bool {
+func (m *MPLSL3Response) GetMplsPrefix() []*MPLSL3Prefix {
 	if m != nil {
-		return m.IsTransitive
-	}
-	return false
-}
-
-func (m *TwoOctetAsSpecificExtended) GetSubType() uint32 {
-	if m != nil {
-		return m.SubType
-	}
-	return 0
-}
-
-func (m *TwoOctetAsSpecificExtended) GetAs() uint32 {
-	if m != nil {
-		return m.As
-	}
-	return 0
-}
-
-func (m *TwoOctetAsSpecificExtended) GetLocalAdmin() uint32 {
-	if m != nil {
-		return m.LocalAdmin
-	}
-	return 0
-}
-
-type IPv4AddressSpecificExtended struct {
-	IsTransitive         bool     `protobuf:"varint,1,opt,name=is_transitive,json=isTransitive,proto3" json:"is_transitive,omitempty"`
-	SubType              uint32   `protobuf:"varint,2,opt,name=sub_type,json=subType,proto3" json:"sub_type,omitempty"`
-	Address              string   `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
-	LocalAdmin           uint32   `protobuf:"varint,4,opt,name=local_admin,json=localAdmin,proto3" json:"local_admin,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *IPv4AddressSpecificExtended) Reset()         { *m = IPv4AddressSpecificExtended{} }
-func (m *IPv4AddressSpecificExtended) String() string { return proto.CompactTextString(m) }
-func (*IPv4AddressSpecificExtended) ProtoMessage()    {}
-func (*IPv4AddressSpecificExtended) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{4}
-}
-
-func (m *IPv4AddressSpecificExtended) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_IPv4AddressSpecificExtended.Unmarshal(m, b)
-}
-func (m *IPv4AddressSpecificExtended) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_IPv4AddressSpecificExtended.Marshal(b, m, deterministic)
-}
-func (m *IPv4AddressSpecificExtended) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_IPv4AddressSpecificExtended.Merge(m, src)
-}
-func (m *IPv4AddressSpecificExtended) XXX_Size() int {
-	return xxx_messageInfo_IPv4AddressSpecificExtended.Size(m)
-}
-func (m *IPv4AddressSpecificExtended) XXX_DiscardUnknown() {
-	xxx_messageInfo_IPv4AddressSpecificExtended.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_IPv4AddressSpecificExtended proto.InternalMessageInfo
-
-func (m *IPv4AddressSpecificExtended) GetIsTransitive() bool {
-	if m != nil {
-		return m.IsTransitive
-	}
-	return false
-}
-
-func (m *IPv4AddressSpecificExtended) GetSubType() uint32 {
-	if m != nil {
-		return m.SubType
-	}
-	return 0
-}
-
-func (m *IPv4AddressSpecificExtended) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-func (m *IPv4AddressSpecificExtended) GetLocalAdmin() uint32 {
-	if m != nil {
-		return m.LocalAdmin
-	}
-	return 0
-}
-
-type FourOctetAsSpecificExtended struct {
-	IsTransitive         bool     `protobuf:"varint,1,opt,name=is_transitive,json=isTransitive,proto3" json:"is_transitive,omitempty"`
-	SubType              uint32   `protobuf:"varint,2,opt,name=sub_type,json=subType,proto3" json:"sub_type,omitempty"`
-	As                   uint32   `protobuf:"varint,3,opt,name=as,proto3" json:"as,omitempty"`
-	LocalAdmin           uint32   `protobuf:"varint,4,opt,name=local_admin,json=localAdmin,proto3" json:"local_admin,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *FourOctetAsSpecificExtended) Reset()         { *m = FourOctetAsSpecificExtended{} }
-func (m *FourOctetAsSpecificExtended) String() string { return proto.CompactTextString(m) }
-func (*FourOctetAsSpecificExtended) ProtoMessage()    {}
-func (*FourOctetAsSpecificExtended) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{5}
-}
-
-func (m *FourOctetAsSpecificExtended) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_FourOctetAsSpecificExtended.Unmarshal(m, b)
-}
-func (m *FourOctetAsSpecificExtended) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_FourOctetAsSpecificExtended.Marshal(b, m, deterministic)
-}
-func (m *FourOctetAsSpecificExtended) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FourOctetAsSpecificExtended.Merge(m, src)
-}
-func (m *FourOctetAsSpecificExtended) XXX_Size() int {
-	return xxx_messageInfo_FourOctetAsSpecificExtended.Size(m)
-}
-func (m *FourOctetAsSpecificExtended) XXX_DiscardUnknown() {
-	xxx_messageInfo_FourOctetAsSpecificExtended.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_FourOctetAsSpecificExtended proto.InternalMessageInfo
-
-func (m *FourOctetAsSpecificExtended) GetIsTransitive() bool {
-	if m != nil {
-		return m.IsTransitive
-	}
-	return false
-}
-
-func (m *FourOctetAsSpecificExtended) GetSubType() uint32 {
-	if m != nil {
-		return m.SubType
-	}
-	return 0
-}
-
-func (m *FourOctetAsSpecificExtended) GetAs() uint32 {
-	if m != nil {
-		return m.As
-	}
-	return 0
-}
-
-func (m *FourOctetAsSpecificExtended) GetLocalAdmin() uint32 {
-	if m != nil {
-		return m.LocalAdmin
-	}
-	return 0
-}
-
-type Prefix struct {
-	Address              []byte   `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	MaskLength           uint32   `protobuf:"varint,2,opt,name=mask_length,json=maskLength,proto3" json:"mask_length,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Prefix) Reset()         { *m = Prefix{} }
-func (m *Prefix) String() string { return proto.CompactTextString(m) }
-func (*Prefix) ProtoMessage()    {}
-func (*Prefix) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{6}
-}
-
-func (m *Prefix) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Prefix.Unmarshal(m, b)
-}
-func (m *Prefix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Prefix.Marshal(b, m, deterministic)
-}
-func (m *Prefix) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Prefix.Merge(m, src)
-}
-func (m *Prefix) XXX_Size() int {
-	return xxx_messageInfo_Prefix.Size(m)
-}
-func (m *Prefix) XXX_DiscardUnknown() {
-	xxx_messageInfo_Prefix.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Prefix proto.InternalMessageInfo
-
-func (m *Prefix) GetAddress() []byte {
-	if m != nil {
-		return m.Address
-	}
-	return nil
-}
-
-func (m *Prefix) GetMaskLength() uint32 {
-	if m != nil {
-		return m.MaskLength
-	}
-	return 0
-}
-
-type LUPrefix struct {
-	Prefix               *Prefix  `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	UcastLabel           uint32   `protobuf:"varint,2,opt,name=ucast_label,json=ucastLabel,proto3" json:"ucast_label,omitempty"`
-	SidLabel             uint32   `protobuf:"varint,3,opt,name=sid_label,json=sidLabel,proto3" json:"sid_label,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *LUPrefix) Reset()         { *m = LUPrefix{} }
-func (m *LUPrefix) String() string { return proto.CompactTextString(m) }
-func (*LUPrefix) ProtoMessage()    {}
-func (*LUPrefix) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{7}
-}
-
-func (m *LUPrefix) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LUPrefix.Unmarshal(m, b)
-}
-func (m *LUPrefix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LUPrefix.Marshal(b, m, deterministic)
-}
-func (m *LUPrefix) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LUPrefix.Merge(m, src)
-}
-func (m *LUPrefix) XXX_Size() int {
-	return xxx_messageInfo_LUPrefix.Size(m)
-}
-func (m *LUPrefix) XXX_DiscardUnknown() {
-	xxx_messageInfo_LUPrefix.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LUPrefix proto.InternalMessageInfo
-
-func (m *LUPrefix) GetPrefix() *Prefix {
-	if m != nil {
-		return m.Prefix
-	}
-	return nil
-}
-
-func (m *LUPrefix) GetUcastLabel() uint32 {
-	if m != nil {
-		return m.UcastLabel
-	}
-	return 0
-}
-
-func (m *LUPrefix) GetSidLabel() uint32 {
-	if m != nil {
-		return m.SidLabel
-	}
-	return 0
-}
-
-type VPNPrefix struct {
-	Prefix *Prefix `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	// vpn label assigned to the prefix by the originating provider edge router
-	VpnLabel uint32 `protobuf:"varint,2,opt,name=vpn_label,json=vpnLabel,proto3" json:"vpn_label,omitempty"`
-	// sid label is an identifier used for a provider edge router identification
-	SidLabel uint32 `protobuf:"varint,3,opt,name=sid_label,json=sidLabel,proto3" json:"sid_label,omitempty"`
-	// Source Autonomous System Number
-	Asn uint32 `protobuf:"varint,4,opt,name=asn,proto3" json:"asn,omitempty"`
-	// Next hop address
-	NhAddress []byte `protobuf:"bytes,5,opt,name=nh_address,json=nhAddress,proto3" json:"nh_address,omitempty"`
-	// Route Distinguisher must be one of
-	// RouteDistinguisherTwoOctetAS,
-	// RouteDistinguisherIPAddressAS,
-	// or RouteDistinguisherFourOctetAS.
-	// Mandatory parameter
-	Rd *any.Any `protobuf:"bytes,6,opt,name=rd,proto3" json:"rd,omitempty"`
-	// List of the a specific prefix's Route Targets. Each must be one of
-	// TwoOctetAsSpecificExtended,
-	// IPv4AddressSpecificExtended,
-	// or FourOctetAsSpecificExtended.
-	Rt                   []*any.Any `protobuf:"bytes,7,rep,name=rt,proto3" json:"rt,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
-	XXX_unrecognized     []byte     `json:"-"`
-	XXX_sizecache        int32      `json:"-"`
-}
-
-func (m *VPNPrefix) Reset()         { *m = VPNPrefix{} }
-func (m *VPNPrefix) String() string { return proto.CompactTextString(m) }
-func (*VPNPrefix) ProtoMessage()    {}
-func (*VPNPrefix) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{8}
-}
-
-func (m *VPNPrefix) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_VPNPrefix.Unmarshal(m, b)
-}
-func (m *VPNPrefix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_VPNPrefix.Marshal(b, m, deterministic)
-}
-func (m *VPNPrefix) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VPNPrefix.Merge(m, src)
-}
-func (m *VPNPrefix) XXX_Size() int {
-	return xxx_messageInfo_VPNPrefix.Size(m)
-}
-func (m *VPNPrefix) XXX_DiscardUnknown() {
-	xxx_messageInfo_VPNPrefix.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_VPNPrefix proto.InternalMessageInfo
-
-func (m *VPNPrefix) GetPrefix() *Prefix {
-	if m != nil {
-		return m.Prefix
-	}
-	return nil
-}
-
-func (m *VPNPrefix) GetVpnLabel() uint32 {
-	if m != nil {
-		return m.VpnLabel
-	}
-	return 0
-}
-
-func (m *VPNPrefix) GetSidLabel() uint32 {
-	if m != nil {
-		return m.SidLabel
-	}
-	return 0
-}
-
-func (m *VPNPrefix) GetAsn() uint32 {
-	if m != nil {
-		return m.Asn
-	}
-	return 0
-}
-
-func (m *VPNPrefix) GetNhAddress() []byte {
-	if m != nil {
-		return m.NhAddress
-	}
-	return nil
-}
-
-func (m *VPNPrefix) GetRd() *any.Any {
-	if m != nil {
-		return m.Rd
-	}
-	return nil
-}
-
-func (m *VPNPrefix) GetRt() []*any.Any {
-	if m != nil {
-		return m.Rt
-	}
-	return nil
-}
-
-// RequestVPN call used to request L3 VPN entries, identified by one Route
-// Distinguisher which can be one of listed below types, and one or more Route
-// Targets.
-type L3VPNRequest struct {
-	// Route Distinguisher must be one of
-	// RouteDistinguisherTwoOctetAS,
-	// RouteDistinguisherIPAddressAS,
-	// or RouteDistinguisherFourOctetAS.
-	// Mandatory parameter
-	Rd *any.Any `protobuf:"bytes,1,opt,name=rd,proto3" json:"rd,omitempty"`
-	// Identifies if request sent for ipv4 prefixes in this case this field should
-	// be set to true or ipv6, in this case this field should be set to false
-	Ipv4 bool `protobuf:"varint,2,opt,name=ipv4,proto3" json:"ipv4,omitempty"`
-	// List of the Route Targets. Each must be one of
-	// TwoOctetAsSpecificExtended,
-	// IPv4AddressSpecificExtended,
-	// or FourOctetAsSpecificExtended.
-	// Optional parameter
-	Rt []*any.Any `protobuf:"bytes,3,rep,name=rt,proto3" json:"rt,omitempty"`
-	// vpn_prefix is L3 VPN prefix which vpn label is requested for.
-	// Optional parameter
-	VpnPrefix            *Prefix  `protobuf:"bytes,4,opt,name=vpn_prefix,json=vpnPrefix,proto3" json:"vpn_prefix,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *L3VPNRequest) Reset()         { *m = L3VPNRequest{} }
-func (m *L3VPNRequest) String() string { return proto.CompactTextString(m) }
-func (*L3VPNRequest) ProtoMessage()    {}
-func (*L3VPNRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{9}
-}
-
-func (m *L3VPNRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_L3VPNRequest.Unmarshal(m, b)
-}
-func (m *L3VPNRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_L3VPNRequest.Marshal(b, m, deterministic)
-}
-func (m *L3VPNRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_L3VPNRequest.Merge(m, src)
-}
-func (m *L3VPNRequest) XXX_Size() int {
-	return xxx_messageInfo_L3VPNRequest.Size(m)
-}
-func (m *L3VPNRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_L3VPNRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_L3VPNRequest proto.InternalMessageInfo
-
-func (m *L3VPNRequest) GetRd() *any.Any {
-	if m != nil {
-		return m.Rd
-	}
-	return nil
-}
-
-func (m *L3VPNRequest) GetIpv4() bool {
-	if m != nil {
-		return m.Ipv4
-	}
-	return false
-}
-
-func (m *L3VPNRequest) GetRt() []*any.Any {
-	if m != nil {
-		return m.Rt
-	}
-	return nil
-}
-
-func (m *L3VPNRequest) GetVpnPrefix() *Prefix {
-	if m != nil {
-		return m.VpnPrefix
-	}
-	return nil
-}
-
-type L3VPNResponse struct {
-	// Identifies if a response carries ipv4 prefixes in this case this field is
-	// set to true or ipv6, in this case this field is set to false
-	Ipv4                 bool         `protobuf:"varint,1,opt,name=ipv4,proto3" json:"ipv4,omitempty"`
-	VpnPrefix            []*VPNPrefix `protobuf:"bytes,2,rep,name=vpn_prefix,json=vpnPrefix,proto3" json:"vpn_prefix,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
-}
-
-func (m *L3VPNResponse) Reset()         { *m = L3VPNResponse{} }
-func (m *L3VPNResponse) String() string { return proto.CompactTextString(m) }
-func (*L3VPNResponse) ProtoMessage()    {}
-func (*L3VPNResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{10}
-}
-
-func (m *L3VPNResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_L3VPNResponse.Unmarshal(m, b)
-}
-func (m *L3VPNResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_L3VPNResponse.Marshal(b, m, deterministic)
-}
-func (m *L3VPNResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_L3VPNResponse.Merge(m, src)
-}
-func (m *L3VPNResponse) XXX_Size() int {
-	return xxx_messageInfo_L3VPNResponse.Size(m)
-}
-func (m *L3VPNResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_L3VPNResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_L3VPNResponse proto.InternalMessageInfo
-
-func (m *L3VPNResponse) GetIpv4() bool {
-	if m != nil {
-		return m.Ipv4
-	}
-	return false
-}
-
-func (m *L3VPNResponse) GetVpnPrefix() []*VPNPrefix {
-	if m != nil {
-		return m.VpnPrefix
-	}
-	return nil
-}
-
-// VPNv4Prefix defines a collection of VPNv4 prefixes, used in AdvBGPVPNv4 to
-// advertise VPNv4 prefixes and in WdBGPVPNv4 to withdraw them.
-type VPNv4Prefix struct {
-	Prefix               []*VPNPrefix `protobuf:"bytes,1,rep,name=prefix,proto3" json:"prefix,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
-}
-
-func (m *VPNv4Prefix) Reset()         { *m = VPNv4Prefix{} }
-func (m *VPNv4Prefix) String() string { return proto.CompactTextString(m) }
-func (*VPNv4Prefix) ProtoMessage()    {}
-func (*VPNv4Prefix) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{11}
-}
-
-func (m *VPNv4Prefix) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_VPNv4Prefix.Unmarshal(m, b)
-}
-func (m *VPNv4Prefix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_VPNv4Prefix.Marshal(b, m, deterministic)
-}
-func (m *VPNv4Prefix) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VPNv4Prefix.Merge(m, src)
-}
-func (m *VPNv4Prefix) XXX_Size() int {
-	return xxx_messageInfo_VPNv4Prefix.Size(m)
-}
-func (m *VPNv4Prefix) XXX_DiscardUnknown() {
-	xxx_messageInfo_VPNv4Prefix.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_VPNv4Prefix proto.InternalMessageInfo
-
-func (m *VPNv4Prefix) GetPrefix() []*VPNPrefix {
-	if m != nil {
-		return m.Prefix
-	}
-	return nil
-}
-
-// VPNv4Prefix defines a collection of VPNv4 prefixes, used in AdvBGPVPNv4 to
-// advertise VPNv4 prefixes and in WdBGPVPNv4 to withdraw them.
-type LabeledUnicastPrefix struct {
-	Prefix               []*LUPrefix `protobuf:"bytes,1,rep,name=prefix,proto3" json:"prefix,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
-	XXX_unrecognized     []byte      `json:"-"`
-	XXX_sizecache        int32       `json:"-"`
-}
-
-func (m *LabeledUnicastPrefix) Reset()         { *m = LabeledUnicastPrefix{} }
-func (m *LabeledUnicastPrefix) String() string { return proto.CompactTextString(m) }
-func (*LabeledUnicastPrefix) ProtoMessage()    {}
-func (*LabeledUnicastPrefix) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4982045cb0164b85, []int{12}
-}
-
-func (m *LabeledUnicastPrefix) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LabeledUnicastPrefix.Unmarshal(m, b)
-}
-func (m *LabeledUnicastPrefix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LabeledUnicastPrefix.Marshal(b, m, deterministic)
-}
-func (m *LabeledUnicastPrefix) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LabeledUnicastPrefix.Merge(m, src)
-}
-func (m *LabeledUnicastPrefix) XXX_Size() int {
-	return xxx_messageInfo_LabeledUnicastPrefix.Size(m)
-}
-func (m *LabeledUnicastPrefix) XXX_DiscardUnknown() {
-	xxx_messageInfo_LabeledUnicastPrefix.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LabeledUnicastPrefix proto.InternalMessageInfo
-
-func (m *LabeledUnicastPrefix) GetPrefix() []*LUPrefix {
-	if m != nil {
-		return m.Prefix
+		return m.MplsPrefix
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterEnum("apis.GatewayErrors", GatewayErrors_name, GatewayErrors_value)
-	proto.RegisterType((*RouteDistinguisherTwoOctetAS)(nil), "apis.RouteDistinguisherTwoOctetAS")
-	proto.RegisterType((*RouteDistinguisherIPAddress)(nil), "apis.RouteDistinguisherIPAddress")
-	proto.RegisterType((*RouteDistinguisherFourOctetAS)(nil), "apis.RouteDistinguisherFourOctetAS")
-	proto.RegisterType((*TwoOctetAsSpecificExtended)(nil), "apis.TwoOctetAsSpecificExtended")
-	proto.RegisterType((*IPv4AddressSpecificExtended)(nil), "apis.IPv4AddressSpecificExtended")
-	proto.RegisterType((*FourOctetAsSpecificExtended)(nil), "apis.FourOctetAsSpecificExtended")
-	proto.RegisterType((*Prefix)(nil), "apis.Prefix")
-	proto.RegisterType((*LUPrefix)(nil), "apis.LUPrefix")
-	proto.RegisterType((*VPNPrefix)(nil), "apis.VPNPrefix")
-	proto.RegisterType((*L3VPNRequest)(nil), "apis.L3VPNRequest")
-	proto.RegisterType((*L3VPNResponse)(nil), "apis.L3VPNResponse")
-	proto.RegisterType((*VPNv4Prefix)(nil), "apis.VPNv4Prefix")
-	proto.RegisterType((*LabeledUnicastPrefix)(nil), "apis.LabeledUnicastPrefix")
+	proto.RegisterType((*L3VpnRequest)(nil), "apis.L3VpnRequest")
+	proto.RegisterType((*Client)(nil), "apis.Client")
+	proto.RegisterType((*SRv6L3Response)(nil), "apis.SRv6L3Response")
+	proto.RegisterType((*MPLSL3Response)(nil), "apis.MPLSL3Response")
 }
 
 func init() { proto.RegisterFile("gateway-services.proto", fileDescriptor_4982045cb0164b85) }
 
 var fileDescriptor_4982045cb0164b85 = []byte{
-	// 743 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x95, 0xdf, 0x52, 0xd3, 0x4e,
-	0x14, 0xc7, 0x7f, 0x49, 0x4b, 0xff, 0x9c, 0xb6, 0xfc, 0xea, 0xca, 0x30, 0xa5, 0x95, 0x91, 0x89,
-	0x8c, 0x3a, 0x3a, 0x16, 0x07, 0x18, 0xf5, 0xca, 0xb1, 0x4a, 0xc4, 0x6a, 0x6d, 0x62, 0x5a, 0xe0,
-	0xb2, 0x93, 0x36, 0x4b, 0xbb, 0x63, 0xd9, 0xc4, 0xec, 0x26, 0xd0, 0x87, 0xd0, 0x6b, 0x67, 0x7c,
-	0x13, 0x9f, 0xc8, 0xc7, 0x70, 0xb2, 0xd9, 0xd4, 0x16, 0x10, 0x14, 0xbd, 0xf0, 0x6e, 0xf7, 0x9c,
-	0xe4, 0xf3, 0x3d, 0xe7, 0x7b, 0xb2, 0x59, 0x58, 0x1e, 0xda, 0x1c, 0x1f, 0xdb, 0x93, 0x07, 0x0c,
-	0xfb, 0x21, 0x19, 0x60, 0x56, 0xf7, 0x7c, 0x97, 0xbb, 0x28, 0x6d, 0x7b, 0x84, 0x55, 0x57, 0x86,
-	0xae, 0x3b, 0x1c, 0xe3, 0x0d, 0x11, 0xeb, 0x07, 0x87, 0x1b, 0x36, 0x9d, 0xc4, 0x0f, 0x54, 0x6b,
-	0xa7, 0x53, 0xf8, 0xc8, 0xe3, 0x32, 0xa9, 0x99, 0x70, 0xc3, 0x72, 0x03, 0x8e, 0x77, 0x08, 0xe3,
-	0x84, 0x0e, 0x03, 0xc2, 0x46, 0xd8, 0xef, 0x1e, 0xbb, 0xc6, 0x80, 0x63, 0xde, 0xe8, 0xa0, 0x25,
-	0x58, 0xb0, 0x9d, 0x23, 0x42, 0x2b, 0xca, 0x9a, 0x72, 0xb7, 0x64, 0xc5, 0x1b, 0x54, 0x85, 0x9c,
-	0xcd, 0x18, 0x19, 0x52, 0xec, 0x54, 0x54, 0x91, 0x98, 0xee, 0x35, 0x03, 0x6a, 0x67, 0x89, 0x4d,
-	0xb3, 0xe1, 0x38, 0x3e, 0x66, 0x6c, 0x1e, 0x98, 0xff, 0x15, 0xe0, 0x3b, 0x58, 0x3d, 0x0b, 0x7c,
-	0xe9, 0x06, 0xfe, 0xd5, 0x6b, 0xfc, 0xa8, 0x40, 0x75, 0xda, 0x24, 0xeb, 0x78, 0x78, 0x40, 0x0e,
-	0xc9, 0x40, 0x3f, 0xe1, 0x98, 0x3a, 0xd8, 0x41, 0xb7, 0xa0, 0x44, 0x58, 0x8f, 0xfb, 0x36, 0x65,
-	0x84, 0x93, 0x10, 0x0b, 0x70, 0xce, 0x2a, 0x12, 0xd6, 0x9d, 0xc6, 0xd0, 0x0a, 0xe4, 0x58, 0xd0,
-	0xef, 0xf1, 0x89, 0x87, 0x25, 0x3f, 0xcb, 0x82, 0x7e, 0x77, 0xe2, 0x61, 0xb4, 0x08, 0xaa, 0xcd,
-	0x2a, 0x29, 0x11, 0x54, 0x6d, 0x86, 0x6e, 0x42, 0x61, 0xec, 0x0e, 0xec, 0x71, 0x2f, 0x2e, 0x33,
-	0x2d, 0x12, 0x20, 0x42, 0x8d, 0x28, 0xa2, 0x7d, 0x56, 0xa0, 0xd6, 0x34, 0xc3, 0x6d, 0x69, 0xd2,
-	0x5f, 0x2f, 0xa8, 0x02, 0x59, 0x3b, 0x46, 0x8b, 0xaa, 0xf2, 0x56, 0xb2, 0xbd, 0xbc, 0xb4, 0x4f,
-	0x0a, 0xd4, 0x7e, 0x98, 0xfd, 0x0f, 0x78, 0xf5, 0x02, 0x32, 0xa6, 0x8f, 0x0f, 0xc9, 0xc9, 0x6c,
-	0x57, 0x91, 0x68, 0x71, 0xae, 0xab, 0x23, 0x9b, 0xbd, 0xef, 0x8d, 0x31, 0x1d, 0xf2, 0x91, 0x94,
-	0x84, 0x28, 0xd4, 0x12, 0x11, 0x8d, 0x42, 0xae, 0xb5, 0x27, 0x31, 0xeb, 0x90, 0xf1, 0xc4, 0x4a,
-	0x50, 0x0a, 0x9b, 0xc5, 0x7a, 0x74, 0xa2, 0xea, 0x71, 0xd6, 0x92, 0xb9, 0x08, 0x19, 0x0c, 0x6c,
-	0xc6, 0x7b, 0x63, 0xbb, 0x8f, 0xc7, 0x09, 0x52, 0x84, 0x5a, 0x51, 0x04, 0xd5, 0x20, 0xcf, 0x88,
-	0x23, 0xd3, 0x71, 0x3f, 0x39, 0x46, 0x1c, 0x91, 0xd4, 0xbe, 0x29, 0x90, 0xdf, 0x37, 0xdb, 0xbf,
-	0xa5, 0x58, 0x83, 0x7c, 0xe8, 0xd1, 0x39, 0xbd, 0x5c, 0xe8, 0xd1, 0xcb, 0xd5, 0x50, 0x19, 0x52,
-	0x36, 0x4b, 0xbc, 0x8b, 0x96, 0x68, 0x15, 0x80, 0x8e, 0x7a, 0x89, 0x5b, 0x0b, 0xc2, 0xad, 0x3c,
-	0x1d, 0x25, 0x87, 0x72, 0x1d, 0x54, 0xdf, 0xa9, 0x64, 0x44, 0x31, 0x4b, 0xf5, 0xf8, 0x7f, 0x51,
-	0x4f, 0xfe, 0x17, 0xf5, 0x06, 0x9d, 0x58, 0xaa, 0xef, 0x88, 0xa7, 0x78, 0x25, 0xbb, 0x96, 0xba,
-	0xe0, 0x29, 0xae, 0x7d, 0x51, 0xa0, 0xd8, 0xda, 0xda, 0x37, 0xdb, 0x16, 0xfe, 0x10, 0x60, 0xc6,
-	0x25, 0x5c, 0xb9, 0x04, 0x8e, 0x20, 0x4d, 0xbc, 0x70, 0x5b, 0x34, 0x9a, 0xb3, 0xc4, 0x5a, 0x0a,
-	0xa6, 0x2e, 0x16, 0x44, 0xf7, 0x01, 0x22, 0x9f, 0xa4, 0xa3, 0xe9, 0x73, 0x1c, 0x8d, 0x7c, 0x8c,
-	0x97, 0x5a, 0x07, 0x4a, 0xb2, 0x38, 0xe6, 0xb9, 0x94, 0xe1, 0xa9, 0xae, 0x32, 0xa3, 0x5b, 0x9f,
-	0x23, 0xaa, 0x42, 0xff, 0xff, 0x98, 0x38, 0x1d, 0xe2, 0x2c, 0xf4, 0x11, 0x14, 0xf6, 0xcd, 0x76,
-	0xb8, 0x2d, 0xc7, 0x7b, 0x67, 0x66, 0xbc, 0xe7, 0xbe, 0x2a, 0xd3, 0xda, 0x53, 0x58, 0x12, 0x03,
-	0xc3, 0xce, 0x1e, 0x25, 0xd1, 0x97, 0x24, 0x01, 0xb7, 0x4f, 0x01, 0x16, 0x63, 0x40, 0xf2, 0xc5,
-	0x26, 0xef, 0xdf, 0x7b, 0x0d, 0xa5, 0xdd, 0xf8, 0x52, 0xd0, 0x7d, 0xdf, 0xf5, 0x19, 0xca, 0x80,
-	0x6a, 0xbc, 0x29, 0xff, 0x87, 0xb2, 0x90, 0xd2, 0x9b, 0x46, 0x59, 0x41, 0x00, 0x19, 0xbd, 0x6d,
-	0xe8, 0xed, 0x6e, 0x59, 0x45, 0x25, 0xc8, 0xeb, 0xdd, 0xe6, 0x5b, 0x7d, 0xc7, 0xd8, 0xeb, 0x96,
-	0x53, 0x62, 0xfb, 0xca, 0xe8, 0x74, 0x77, 0x8c, 0x83, 0x76, 0x39, 0xbd, 0xf9, 0x55, 0x85, 0x45,
-	0x09, 0xeb, 0xc4, 0x17, 0x0c, 0x7a, 0x08, 0x0b, 0xc2, 0x2b, 0x84, 0xa4, 0xfe, 0xcc, 0x54, 0xab,
-	0xd7, 0xe7, 0x62, 0xd2, 0xcc, 0x27, 0x50, 0x68, 0x38, 0xe1, 0xf3, 0x5d, 0x53, 0xd8, 0x81, 0xae,
-	0x4d, 0x1b, 0x4f, 0xbc, 0xa9, 0x2e, 0x9f, 0x19, 0xa3, 0x1e, 0xdd, 0x46, 0xe8, 0x31, 0xc0, 0x81,
-	0x73, 0x95, 0x17, 0x1b, 0x42, 0x72, 0x7a, 0x98, 0xab, 0xb2, 0xac, 0x73, 0x6c, 0xfd, 0x29, 0xe2,
-	0x59, 0xa4, 0xfd, 0x27, 0x84, 0x7e, 0x46, 0xec, 0xb7, 0xbe, 0x07, 0x00, 0x00, 0xff, 0xff, 0x16,
-	0xcc, 0x4f, 0x54, 0xa4, 0x07, 0x00, 0x00,
+	// 401 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x51, 0x5d, 0x8b, 0xd3, 0x40,
+	0x14, 0x25, 0xd9, 0xba, 0x9a, 0xbb, 0x25, 0xc2, 0xb0, 0x94, 0x18, 0x5f, 0x42, 0xf1, 0x21, 0x20,
+	0x66, 0x71, 0xe3, 0xf6, 0xbd, 0xd8, 0x22, 0x42, 0x2b, 0x61, 0x8a, 0x7d, 0x95, 0xa4, 0x99, 0x86,
+	0x81, 0x74, 0x66, 0xcc, 0x4c, 0xa3, 0xfd, 0x4d, 0xfe, 0x06, 0xff, 0x9b, 0x24, 0x37, 0x29, 0xb5,
+	0xf5, 0xe3, 0x61, 0xdf, 0xce, 0xdc, 0x39, 0xf7, 0x9c, 0x73, 0xef, 0x85, 0x51, 0x91, 0x1a, 0xf6,
+	0x2d, 0x3d, 0xbc, 0xd1, 0xac, 0xaa, 0xf9, 0x86, 0xe9, 0x48, 0x55, 0xd2, 0x48, 0x32, 0x48, 0x15,
+	0xd7, 0xfe, 0x8b, 0x42, 0xca, 0xa2, 0x64, 0x77, 0x6d, 0x2d, 0xdb, 0x6f, 0xef, 0x52, 0x71, 0x40,
+	0x82, 0xff, 0xf2, 0xfc, 0x8b, 0xed, 0x94, 0xe9, 0x3f, 0x21, 0x4b, 0x35, 0xeb, 0xf0, 0x73, 0x55,
+	0xb1, 0x2d, 0xff, 0xae, 0x79, 0xde, 0x7f, 0xee, 0x54, 0xd9, 0xd9, 0xf8, 0x4e, 0x56, 0x28, 0x84,
+	0xe3, 0x1f, 0x16, 0x0c, 0x17, 0xf1, 0x5a, 0x09, 0xca, 0xbe, 0xee, 0x99, 0x36, 0xc4, 0x05, 0x9b,
+	0xe7, 0x9e, 0x15, 0x58, 0xe1, 0x90, 0xda, 0x3c, 0x27, 0xaf, 0xc0, 0xae, 0x72, 0xcf, 0x0e, 0xac,
+	0xf0, 0xe6, 0xfe, 0x36, 0x42, 0xfb, 0xa8, 0xb7, 0x8f, 0xa6, 0xe2, 0x40, 0xed, 0x2a, 0x27, 0x04,
+	0x06, 0x5c, 0xd5, 0xef, 0xbc, 0xab, 0xc0, 0x0a, 0x9f, 0xd1, 0x16, 0xb7, 0x9d, 0xc6, 0x1b, 0x04,
+	0x57, 0xff, 0xe8, 0x34, 0xe4, 0x35, 0x40, 0xad, 0xc4, 0x17, 0x8c, 0xeb, 0x3d, 0x69, 0x7d, 0x86,
+	0x51, 0xb3, 0x87, 0x28, 0x69, 0x6b, 0xd4, 0xa9, 0x95, 0x40, 0x38, 0xf6, 0xe0, 0xfa, 0x7d, 0xc9,
+	0x99, 0xb8, 0x88, 0x39, 0x9e, 0x83, 0xbb, 0xa2, 0xf5, 0x64, 0x11, 0x53, 0xa6, 0x95, 0x14, 0x9a,
+	0x91, 0x18, 0x6e, 0x74, 0x55, 0x4f, 0x7a, 0x65, 0xab, 0xcd, 0x41, 0x50, 0x19, 0xa9, 0x9d, 0x3e,
+	0x34, 0xb4, 0xce, 0x60, 0x0e, 0xee, 0x32, 0x59, 0xac, 0x7e, 0x97, 0x69, 0x36, 0xf7, 0x47, 0x19,
+	0xa4, 0xf6, 0x32, 0x0d, 0x0d, 0xf1, 0xfd, 0x4f, 0x1b, 0xdc, 0x0f, 0x78, 0xe2, 0x15, 0x5e, 0x98,
+	0xbc, 0x85, 0xa7, 0x4b, 0x29, 0xb8, 0x91, 0x15, 0xe9, 0xc6, 0xc3, 0x49, 0xfc, 0xd1, 0xc5, 0x6a,
+	0xe6, 0xcd, 0x4d, 0x43, 0x8b, 0x3c, 0x80, 0x83, 0x0e, 0xeb, 0xe4, 0x13, 0xe9, 0x2c, 0x4f, 0x6f,
+	0xe5, 0xdf, 0x9e, 0xc6, 0x38, 0x26, 0x7e, 0x00, 0x07, 0xe7, 0xfb, 0x4f, 0xdb, 0xd9, 0xbe, 0x66,
+	0x40, 0xa6, 0x79, 0xfe, 0x31, 0xa9, 0x27, 0x9f, 0x05, 0xdf, 0xa4, 0x86, 0xca, 0xbd, 0x61, 0x64,
+	0x84, 0xdc, 0x63, 0x59, 0x63, 0xfd, 0x6f, 0xa9, 0x1b, 0x95, 0x19, 0x2b, 0x1f, 0xa9, 0x92, 0x5d,
+	0xb7, 0xef, 0xf8, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x9e, 0x3b, 0xac, 0x28, 0x03, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -891,22 +276,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GatewayServiceClient interface {
-	// API to request L3 VPN label and list of prefixes for VRF specified by RD.
-	// Optionally RT and/or Prefix can be specified as additional selection
-	// creterias.
-	L3VPN(ctx context.Context, in *L3VPNRequest, opts ...grpc.CallOption) (*L3VPNResponse, error)
-	// API to advertise VPNv4 Prefix(s), no response other than Success or Failure
-	// is generated
-	AdvBGPVPNv4(ctx context.Context, in *VPNv4Prefix, opts ...grpc.CallOption) (*empty.Empty, error)
-	// API to withdraw VPNv4 Prefix(s), no response other than Success or Failure
-	// is generated
-	WdBGPVPNv4(ctx context.Context, in *VPNv4Prefix, opts ...grpc.CallOption) (*empty.Empty, error)
-	// API to advertise Labled Unicast Prefix(s), no response other than Success
-	// or Failure is generated
-	AdvLUPrefix(ctx context.Context, in *LabeledUnicastPrefix, opts ...grpc.CallOption) (*empty.Empty, error)
-	// API to withdraw Labled Unicast Prefix(s), no response other than Success or
-	// Failure is generated
-	WdLUPrefix(ctx context.Context, in *LabeledUnicastPrefix, opts ...grpc.CallOption) (*empty.Empty, error)
+	Monitor(ctx context.Context, opts ...grpc.CallOption) (GatewayService_MonitorClient, error)
+	MPLSL3VPN(ctx context.Context, in *L3VpnRequest, opts ...grpc.CallOption) (*MPLSL3Response, error)
+	SRv6L3VPN(ctx context.Context, in *L3VpnRequest, opts ...grpc.CallOption) (*SRv6L3Response, error)
+	AddIPv6UnicatRoute(ctx context.Context, in *IPv6UnicastRoute, opts ...grpc.CallOption) (*empty.Empty, error)
+	DelIPv6UnicatRoute(ctx context.Context, in *IPv6UnicastRoute, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type gatewayServiceClient struct {
@@ -917,45 +291,70 @@ func NewGatewayServiceClient(cc *grpc.ClientConn) GatewayServiceClient {
 	return &gatewayServiceClient{cc}
 }
 
-func (c *gatewayServiceClient) L3VPN(ctx context.Context, in *L3VPNRequest, opts ...grpc.CallOption) (*L3VPNResponse, error) {
-	out := new(L3VPNResponse)
-	err := c.cc.Invoke(ctx, "/apis.GatewayService/L3VPN", in, out, opts...)
+func (c *gatewayServiceClient) Monitor(ctx context.Context, opts ...grpc.CallOption) (GatewayService_MonitorClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GatewayService_serviceDesc.Streams[0], "/apis.GatewayService/Monitor", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gatewayServiceMonitorClient{stream}
+	return x, nil
+}
+
+type GatewayService_MonitorClient interface {
+	Send(*Client) error
+	CloseAndRecv() (*empty.Empty, error)
+	grpc.ClientStream
+}
+
+type gatewayServiceMonitorClient struct {
+	grpc.ClientStream
+}
+
+func (x *gatewayServiceMonitorClient) Send(m *Client) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *gatewayServiceMonitorClient) CloseAndRecv() (*empty.Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(empty.Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gatewayServiceClient) MPLSL3VPN(ctx context.Context, in *L3VpnRequest, opts ...grpc.CallOption) (*MPLSL3Response, error) {
+	out := new(MPLSL3Response)
+	err := c.cc.Invoke(ctx, "/apis.GatewayService/MPLSL3VPN", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *gatewayServiceClient) AdvBGPVPNv4(ctx context.Context, in *VPNv4Prefix, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/apis.GatewayService/AdvBGPVPNv4", in, out, opts...)
+func (c *gatewayServiceClient) SRv6L3VPN(ctx context.Context, in *L3VpnRequest, opts ...grpc.CallOption) (*SRv6L3Response, error) {
+	out := new(SRv6L3Response)
+	err := c.cc.Invoke(ctx, "/apis.GatewayService/SRv6L3VPN", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *gatewayServiceClient) WdBGPVPNv4(ctx context.Context, in *VPNv4Prefix, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *gatewayServiceClient) AddIPv6UnicatRoute(ctx context.Context, in *IPv6UnicastRoute, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/apis.GatewayService/WdBGPVPNv4", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/apis.GatewayService/AddIPv6UnicatRoute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *gatewayServiceClient) AdvLUPrefix(ctx context.Context, in *LabeledUnicastPrefix, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *gatewayServiceClient) DelIPv6UnicatRoute(ctx context.Context, in *IPv6UnicastRoute, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/apis.GatewayService/AdvLUPrefix", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *gatewayServiceClient) WdLUPrefix(ctx context.Context, in *LabeledUnicastPrefix, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/apis.GatewayService/WdLUPrefix", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/apis.GatewayService/DelIPv6UnicatRoute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -964,134 +363,131 @@ func (c *gatewayServiceClient) WdLUPrefix(ctx context.Context, in *LabeledUnicas
 
 // GatewayServiceServer is the server API for GatewayService service.
 type GatewayServiceServer interface {
-	// API to request L3 VPN label and list of prefixes for VRF specified by RD.
-	// Optionally RT and/or Prefix can be specified as additional selection
-	// creterias.
-	L3VPN(context.Context, *L3VPNRequest) (*L3VPNResponse, error)
-	// API to advertise VPNv4 Prefix(s), no response other than Success or Failure
-	// is generated
-	AdvBGPVPNv4(context.Context, *VPNv4Prefix) (*empty.Empty, error)
-	// API to withdraw VPNv4 Prefix(s), no response other than Success or Failure
-	// is generated
-	WdBGPVPNv4(context.Context, *VPNv4Prefix) (*empty.Empty, error)
-	// API to advertise Labled Unicast Prefix(s), no response other than Success
-	// or Failure is generated
-	AdvLUPrefix(context.Context, *LabeledUnicastPrefix) (*empty.Empty, error)
-	// API to withdraw Labled Unicast Prefix(s), no response other than Success or
-	// Failure is generated
-	WdLUPrefix(context.Context, *LabeledUnicastPrefix) (*empty.Empty, error)
+	Monitor(GatewayService_MonitorServer) error
+	MPLSL3VPN(context.Context, *L3VpnRequest) (*MPLSL3Response, error)
+	SRv6L3VPN(context.Context, *L3VpnRequest) (*SRv6L3Response, error)
+	AddIPv6UnicatRoute(context.Context, *IPv6UnicastRoute) (*empty.Empty, error)
+	DelIPv6UnicatRoute(context.Context, *IPv6UnicastRoute) (*empty.Empty, error)
 }
 
 // UnimplementedGatewayServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedGatewayServiceServer struct {
 }
 
-func (*UnimplementedGatewayServiceServer) L3VPN(ctx context.Context, req *L3VPNRequest) (*L3VPNResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method L3VPN not implemented")
+func (*UnimplementedGatewayServiceServer) Monitor(srv GatewayService_MonitorServer) error {
+	return status.Errorf(codes.Unimplemented, "method Monitor not implemented")
 }
-func (*UnimplementedGatewayServiceServer) AdvBGPVPNv4(ctx context.Context, req *VPNv4Prefix) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AdvBGPVPNv4 not implemented")
+func (*UnimplementedGatewayServiceServer) MPLSL3VPN(ctx context.Context, req *L3VpnRequest) (*MPLSL3Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MPLSL3VPN not implemented")
 }
-func (*UnimplementedGatewayServiceServer) WdBGPVPNv4(ctx context.Context, req *VPNv4Prefix) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WdBGPVPNv4 not implemented")
+func (*UnimplementedGatewayServiceServer) SRv6L3VPN(ctx context.Context, req *L3VpnRequest) (*SRv6L3Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SRv6L3VPN not implemented")
 }
-func (*UnimplementedGatewayServiceServer) AdvLUPrefix(ctx context.Context, req *LabeledUnicastPrefix) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AdvLUPrefix not implemented")
+func (*UnimplementedGatewayServiceServer) AddIPv6UnicatRoute(ctx context.Context, req *IPv6UnicastRoute) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddIPv6UnicatRoute not implemented")
 }
-func (*UnimplementedGatewayServiceServer) WdLUPrefix(ctx context.Context, req *LabeledUnicastPrefix) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WdLUPrefix not implemented")
+func (*UnimplementedGatewayServiceServer) DelIPv6UnicatRoute(ctx context.Context, req *IPv6UnicastRoute) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelIPv6UnicatRoute not implemented")
 }
 
 func RegisterGatewayServiceServer(s *grpc.Server, srv GatewayServiceServer) {
 	s.RegisterService(&_GatewayService_serviceDesc, srv)
 }
 
-func _GatewayService_L3VPN_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(L3VPNRequest)
+func _GatewayService_Monitor_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GatewayServiceServer).Monitor(&gatewayServiceMonitorServer{stream})
+}
+
+type GatewayService_MonitorServer interface {
+	SendAndClose(*empty.Empty) error
+	Recv() (*Client, error)
+	grpc.ServerStream
+}
+
+type gatewayServiceMonitorServer struct {
+	grpc.ServerStream
+}
+
+func (x *gatewayServiceMonitorServer) SendAndClose(m *empty.Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *gatewayServiceMonitorServer) Recv() (*Client, error) {
+	m := new(Client)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _GatewayService_MPLSL3VPN_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(L3VpnRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).L3VPN(ctx, in)
+		return srv.(GatewayServiceServer).MPLSL3VPN(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/apis.GatewayService/L3VPN",
+		FullMethod: "/apis.GatewayService/MPLSL3VPN",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).L3VPN(ctx, req.(*L3VPNRequest))
+		return srv.(GatewayServiceServer).MPLSL3VPN(ctx, req.(*L3VpnRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GatewayService_AdvBGPVPNv4_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VPNv4Prefix)
+func _GatewayService_SRv6L3VPN_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(L3VpnRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).AdvBGPVPNv4(ctx, in)
+		return srv.(GatewayServiceServer).SRv6L3VPN(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/apis.GatewayService/AdvBGPVPNv4",
+		FullMethod: "/apis.GatewayService/SRv6L3VPN",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).AdvBGPVPNv4(ctx, req.(*VPNv4Prefix))
+		return srv.(GatewayServiceServer).SRv6L3VPN(ctx, req.(*L3VpnRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GatewayService_WdBGPVPNv4_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VPNv4Prefix)
+func _GatewayService_AddIPv6UnicatRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPv6UnicastRoute)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).WdBGPVPNv4(ctx, in)
+		return srv.(GatewayServiceServer).AddIPv6UnicatRoute(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/apis.GatewayService/WdBGPVPNv4",
+		FullMethod: "/apis.GatewayService/AddIPv6UnicatRoute",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).WdBGPVPNv4(ctx, req.(*VPNv4Prefix))
+		return srv.(GatewayServiceServer).AddIPv6UnicatRoute(ctx, req.(*IPv6UnicastRoute))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GatewayService_AdvLUPrefix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LabeledUnicastPrefix)
+func _GatewayService_DelIPv6UnicatRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPv6UnicastRoute)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).AdvLUPrefix(ctx, in)
+		return srv.(GatewayServiceServer).DelIPv6UnicatRoute(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/apis.GatewayService/AdvLUPrefix",
+		FullMethod: "/apis.GatewayService/DelIPv6UnicatRoute",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).AdvLUPrefix(ctx, req.(*LabeledUnicastPrefix))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GatewayService_WdLUPrefix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LabeledUnicastPrefix)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GatewayServiceServer).WdLUPrefix(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/apis.GatewayService/WdLUPrefix",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).WdLUPrefix(ctx, req.(*LabeledUnicastPrefix))
+		return srv.(GatewayServiceServer).DelIPv6UnicatRoute(ctx, req.(*IPv6UnicastRoute))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1101,26 +497,28 @@ var _GatewayService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*GatewayServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "L3VPN",
-			Handler:    _GatewayService_L3VPN_Handler,
+			MethodName: "MPLSL3VPN",
+			Handler:    _GatewayService_MPLSL3VPN_Handler,
 		},
 		{
-			MethodName: "AdvBGPVPNv4",
-			Handler:    _GatewayService_AdvBGPVPNv4_Handler,
+			MethodName: "SRv6L3VPN",
+			Handler:    _GatewayService_SRv6L3VPN_Handler,
 		},
 		{
-			MethodName: "WdBGPVPNv4",
-			Handler:    _GatewayService_WdBGPVPNv4_Handler,
+			MethodName: "AddIPv6UnicatRoute",
+			Handler:    _GatewayService_AddIPv6UnicatRoute_Handler,
 		},
 		{
-			MethodName: "AdvLUPrefix",
-			Handler:    _GatewayService_AdvLUPrefix_Handler,
-		},
-		{
-			MethodName: "WdLUPrefix",
-			Handler:    _GatewayService_WdLUPrefix_Handler,
+			MethodName: "DelIPv6UnicatRoute",
+			Handler:    _GatewayService_DelIPv6UnicatRoute_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Monitor",
+			Handler:       _GatewayService_Monitor_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "gateway-services.proto",
 }

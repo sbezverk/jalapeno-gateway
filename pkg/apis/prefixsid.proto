@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "base.proto";
+
+package apis;
+
+// https://tools.ietf.org/html/draft-dawra-bess-srv6-services-02#section-2.1.1
+message SRv6StructureSubSubTLV {
+  uint32 local_block_length = 1;
+  uint32 local_node_length = 2;
+  uint32 function_length = 3;
+  uint32 argument_length = 4;
+  uint32 transposition_length = 5;
+  uint32 transposition_offset = 6;
+}
+
+message SRv6SIDFlags {
+  // Placeholder for future sid flags
+  bool flag_1 = 1;
+}
+
+message SRv6TLV { repeated google.protobuf.Any tlv = 1; }
+
+// https://tools.ietf.org/html/draft-dawra-bess-srv6-services-02#section-2.1.1
+message SRv6InformationSubTLV {
+  bytes sid = 1;
+  SRv6SIDFlags flags = 2;
+  uint32 endpoint_behavior = 3;
+  // SRv6TLV is one of:
+  // - SRv6StructureSubSubTLV
+  map<uint32, SRv6TLV> sub_sub_tlvs = 4;
+}
+
+// https://tools.ietf.org/html/draft-dawra-bess-srv6-services-02#section-2
+message SRv6L3ServiceTLV {
+  // SRv6TLV is one of:
+  // - SRv6InformationSubTLV
+  map<uint32, SRv6TLV> sub_tlvs = 1;
+}
+
+// https://tools.ietf.org/html/rfc8669
+message PrefixSID {
+  // tlv is one of:
+  // - IndexLabelTLV Type 1 (not yet implemented)
+  // - OriginatorSRGBTLV Type 3 (not yet implemented)
+  // - SRv6L3ServiceTLV Type 5
+  // - SRv6L2ServiceTLV Type 6 (not yet implemented)
+  repeated google.protobuf.Any tlvs = 1;
+}
+
+message SRv6L3Prefix {
+  apis.Prefix prefix = 1;
+  // Source Autonomous System Number
+  uint32 asn = 2;
+  // VPN Prefix's Next hop address
+  bytes nh_address = 3;
+  // VPN Prefix's RD
+  google.protobuf.Any rd = 4;
+  // VPN Prefix's RTs
+  repeated google.protobuf.Any rt = 5;
+  // Label
+  int32 label = 6;
+  // VPN Prefix's Prefix SID
+  PrefixSID prefix_sid = 7;
+}

@@ -3,6 +3,8 @@ package dbclient
 import (
 	"context"
 
+	"github.com/sbezverk/gobmp/pkg/srv6"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 )
 
@@ -16,7 +18,8 @@ type DBClient interface {
 
 // DBServices defines interface for Database Services
 type DBServices interface {
-	L3VPNRequest(context.Context, *L3VpnReq) (*L3VpnResp, error)
+	MPLSL3VpnRequest(context.Context, *L3VpnReq) (*MPLSL3VpnResp, error)
+	SRv6L3VpnRequest(context.Context, *L3VpnReq) (*SRv6L3VpnResp, error)
 }
 
 // L3VpnReq defines data struct for L3 VPN database request
@@ -28,18 +31,30 @@ type L3VpnReq struct {
 	MaskLength uint32
 }
 
-// L3VPNPrefix defines L3 VPN prefix Database object
-type L3VPNPrefix struct {
-	Prefix     string   `json:"VPN_Prefix,omitempty"`
-	MaskLength uint32   `json:"VPN_Prefix_Len,omitempty"`
-	VpnLabel   uint32   `json:"VPN_Label,omitempty"`
-	SidLabel   uint32   `json:"PrefixSID,omitempty"`
-	RT         []string `json:"RT,omitempty"`
+// MPLSL3VpnPrefix defines L3 VPN prefix Database object
+type MPLSL3VpnPrefix struct {
+	Prefix     string
+	MaskLength uint32
+	VpnLabel   uint32
+	RT         []string
 }
 
-// L3VpnResp defines data struct for L3 VPN database response
-type L3VpnResp struct {
-	Prefix []L3VPNPrefix
+// MPLSL3VpnResp defines data struct for L3 VPN database response
+type MPLSL3VpnResp struct {
+	Prefix []*pbapi.MPLSL3Prefix
+}
+
+// SRv6L3VpnPrefix defines SRv6 L3 VPN prefix Database object
+type SRv6L3VpnPrefix struct {
+	Prefix     string
+	MaskLength uint32
+	RT         []string
+	PrefixSID  *srv6.L3Service
+}
+
+// SRv6L3VpnResp defines data struct for SRv6 L3 VPN database response
+type SRv6L3VpnResp struct {
+	Prefix []*pbapi.SRv6L3Prefix
 }
 
 // NewL3VpnReq instantiates a L3 VPN Databse Request object

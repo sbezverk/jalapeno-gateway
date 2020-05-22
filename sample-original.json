@@ -1,0 +1,60 @@
+{
+  "action": "add",
+  "router_hash": "cc54d588f2a8bb0f7be08133e6ae9e47",
+  "router_ip": "192:168:5::4",
+  "base_attrs": {
+    "base_attr_hash": "4dae5eb061de735d6fd8b752bb59c619",
+    "origin": "incomplete",
+    "as_path": [
+      65003
+    ],
+    "as_path_count": 1,
+    "local_pref": 100,
+    "is_atomic_agg": false,
+    "ext_community_list": "rt=5:65003"
+  },
+  "peer_hash": "74dbb40a04530986071f131b8bad9f99",
+  "peer_ip": "192:168:5::3",
+  "peer_asn": 5070,
+  "timestamp": "May 18 20:43:11.000770",
+  "prefix": "192.168.5.1",
+  "prefix_len": 32,
+  "is_ipv4": true,
+  "origin_as": "65003",
+  "nexthop": "192:168:5::3",
+  "is_nexthop_ipv4": false,
+  "labels": [
+    1040
+  ],
+  "isprepolicy": false,
+  "is_adj_rib_in": false,
+  "vpn_rd": "5070:65033",
+  "vpn_rd_type": 0,
+  "prefix_sid": {
+    "srv6_l3_service": {
+      "service_sub_tlv": {
+        "1": [
+          {
+            "key_value": {
+              "information_sub_tlv_sid": "2001:0:5:3::",
+              "information_sub_tlv_endpoint_behavior": 17,
+              "sub_sub_tlv": {
+                "1": [
+                  {
+                    "key_value": {
+                      "local_block_length": 40,
+                      "locator_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

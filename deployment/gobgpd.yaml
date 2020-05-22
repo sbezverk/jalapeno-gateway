@@ -13,13 +13,16 @@ data:
           default-export-policy: accept-route
     neighbors:
       - config:
-          neighbor-address: 2001:470:b16e:59::5
+          neighbor-address: 2001:470:b16e:80::29
           peer-as: 5070
         afi-safis:
           - config:
               afi-safi-name: "ipv6-unicast"
           - config:
               afi-safi-name: "l3vpn-ipv4-unicast"
+        transport:
+          config:
+            passive-mode: true
 metadata:
   name: gobgpd-config
   namespace: default
@@ -32,12 +35,20 @@ spec:
       port: 5051
       protocol: TCP
       targetPort: gobgpd-api
+    - name: gobgpd
+      port: 179
+      protocol: TCP
+      targetPort: gobgpd
   selector:
     app: gobgpd
   type: ClusterIP
+  externalIPs:
+    - 2001:470:b16e:80::29
 metadata:
   name: gobgpd
   namespace: default
+  #  labels:
+  #  service.kubernetes.io/service-proxy-name: nfproxy
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -60,6 +71,9 @@ spec:
             - containerPort: 50051
               name: gobgpd-api
               protocol: TCP
+            - containerPort: 179
+              name: gobgpd
+              protocol: TCP
           args:
             - --config-file
             - "/config/gobgp-config.yaml"
@@ -75,7 +89,7 @@ spec:
             - name: config-volume
               mountPath: /config
       nodeSelector:
-        jalapeno-app: bgp-speaker
+        jalapeno.io/infra-app: bgp-speaker
       volumes:
         - name: config-volume
           configMap:

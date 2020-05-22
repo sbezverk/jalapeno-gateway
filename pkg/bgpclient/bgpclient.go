@@ -23,10 +23,8 @@ type BGPClient interface {
 
 // BGPServices defines interface with BGP services methods
 type BGPServices interface {
-	AdvertiseVPNv4([]*pbapi.VPNPrefix) error
-	WithdrawVPNv4([]*pbapi.VPNPrefix) error
-	AdvertiseLUPrefix([]*pbapi.LUPrefix) error
-	WithdrawLUPrefix([]*pbapi.LUPrefix) error
+	AddIPv6UnicatRoute(context.Context, []*pbapi.BGPPath) error
+	DelIPv6UnicatRoute(context.Context, []*pbapi.BGPPath) error
 }
 
 type bgpClient struct {

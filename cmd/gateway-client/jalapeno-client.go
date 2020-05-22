@@ -14,6 +14,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/osrg/gobgp/pkg/packet/bgp"
+	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"google.golang.org/grpc"
@@ -45,34 +46,34 @@ func main() {
 
 func mainLoop(gwclient pbapi.GatewayServiceClient) {
 	parameters := []parameter{
-		{
-			prompt:    "IPv4 address used by the application ",
-			validator: ipValidator,
-		},
-		{
-			prompt:    "IPv4 address for the VPNv4 next hop ",
-			validator: ipValidator,
-		},
-		{
-			prompt:    "Autonomous System Number ",
-			validator: asnValidator,
-		},
+		// {
+		// 	prompt:    "IPv4 address used by the application ",
+		// 	validator: ipValidator,
+		// },
+		// {
+		// 	prompt:    "IPv4 address for the VPNv4 next hop ",
+		// 	validator: ipValidator,
+		// },
+		// {
+		// 	prompt:    "Autonomous System Number ",
+		// 	validator: asnValidator,
+		// },
 		{
 			prompt:    "RD for the application VRF ",
 			validator: rdValidator,
 		},
-		{
-			prompt:    "RT for the application address ",
-			validator: rtValidator,
-		},
-		{
-			prompt:    "VPN Label ",
-			validator: labelValidator,
-		},
-		{
-			prompt:    "Unicast Label ",
-			validator: labelValidator,
-		},
+		// {
+		// 	prompt:    "RT for the application address ",
+		// 	validator: rtValidator,
+		// },
+		// {
+		// 	prompt:    "VPN Label ",
+		// 	validator: labelValidator,
+		// },
+		// {
+		// 	prompt:    "Unicast Label ",
+		// 	validator: labelValidator,
+		// },
 	}
 	for {
 		getInput(parameters, 0)
@@ -80,7 +81,6 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 			fmt.Printf("\nrequest failed with error: %+v\n\n\n", err)
 			continue
 		}
-		fmt.Printf("\nSuccessfully advertised prefix %s in VRF RD: %s\n\n\n", parameters[0].input, parameters[3].input)
 	}
 }
 
@@ -89,110 +89,87 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 		"CLIENT_IP": net.ParseIP("57.57.57.7").String(),
 	}))
 	// Prepare the application IP
-	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
+	//	prefix, maskLength, _ := getPrefixAndMask(p[0].input)
 	// Prepare the next hop address
-	nhPrefix, nhMask, _ := getPrefixAndMask(p[1].input)
+	//	nhPrefix, nhMask, _ := getPrefixAndMask(p[1].input)
 	// Get ASN
-	asn, _ := strconv.Atoi(p[2].input)
+	//	asn, _ := strconv.Atoi(p[2].input)
 	// Get and marshal RD
-	rd, _ := marshalRD(p[3].input)
+	rd, _ := marshalRD(p[0].input)
 	// Get and marshal a slice of RTs
-	rt, _ := marshalRT(p[4].input)
+	//	rt, _ := marshalRT(p[4].input)
 	// Get VPN label
-	vpnLabel, _ := getLabel(p[5].input)
+	//	vpnLabel, _ := getLabel(p[5].input)
 	// Get Unicast label
-	ucastLabel, _ := getLabel(p[6].input)
+	// ucastLabel, _ := getLabel(p[6].input)
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
 	if err != nil {
-		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[3].input, err)
+		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[0].input, err)
 	}
-	fmt.Printf("\nVPN Prefixes for RD: %s\n", p[3].input)
+	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[0].input)
 	for _, p := range prefixes {
-		fmt.Printf("- %s/%d VPN Label: %d Prefix SID label: %d\n", net.IP(p.Prefix.Address).String(), p.Prefix.MaskLength, p.VpnLabel, p.SidLabel)
-	}
-	if err := advertiseVpnPrefix(ctx, gwclient, prefix, maskLength, nhPrefix, asn, rd, rt, vpnLabel); err != nil {
-		return fmt.Errorf("failed to program application's ip as vpn prefix in VRF RD: %s with error: %+v", p[3].input, err)
-	}
-
-	if err := advertiseLUPrefix(ctx, gwclient, nhPrefix, nhMask, ucastLabel); err != nil {
-		return fmt.Errorf("failed to program labeled unicast prefix with error: %+v", err)
+		if p.PrefixSid != nil {
+			if psid, err := bgpclient.UnmarshalPrefixSID(p.PrefixSid.Tlvs); err == nil {
+				if psid.SRv6L3Service != nil {
+					for _, t := range psid.SRv6L3Service.SubTLVs[1] {
+						s := t.(*srv6.InformationSubTLV).SubSubTLVs[1][0]
+						fmt.Printf("SubTLV: %+v SubSubTLVs: %+v\n", t, s.(*srv6.SIDStructureSubSubTLV))
+					}
+				}
+			}
+		}
 	}
 	return nil
 }
 
-func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.VPNPrefix, error) {
-	req := &pbapi.L3VPNRequest{Rd: rd, Ipv4: true}
-	resp, err := gwclient.L3VPN(ctx, req)
+func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.SRv6L3Prefix, error) {
+	req := &pbapi.L3VpnRequest{Rd: rd, Ipv4: true}
+	resp, err := gwclient.SRv6L3VPN(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.VpnPrefix, nil
+	return resp.Srv6Prefix, nil
 }
 
-func advertiseVpnPrefix(ctx context.Context,
-	gwclient pbapi.GatewayServiceClient,
-	// VPN prefix
-	prefix []byte,
-	// VPN Prefix mask
-	mask int,
-	// VPN Prefix's Next hop address
-	nhPrefix []byte,
-	// Autonomous Systen Number
-	asn int,
-	// VPN Prefix's Route Distinguisher
-	rd *any.Any,
-	// VPN Prefix's Route Targets
-	rt *any.Any,
-	// VPN Prefix's VPN label
-	vpnLabel int) error {
-	req := &pbapi.VPNv4Prefix{
-		Prefix: []*pbapi.VPNPrefix{
-			{
-				Prefix: &pbapi.Prefix{
-					Address:    prefix,
-					MaskLength: uint32(mask),
-				},
-				VpnLabel:  uint32(vpnLabel),
-				NhAddress: nhPrefix,
-				Asn:       uint32(asn),
-				Rd:        rd,
-				Rt: []*any.Any{
-					rt,
-				},
-			},
-		},
-	}
-	// Sending request to program VPNv4 Prefix
-	_, err := gwclient.AdvBGPVPNv4(ctx, req)
+// func advertiseVpnPrefix(ctx context.Context,
+// 	gwclient pbapi.GatewayServiceClient,
+// 	// VPN prefix
+// 	prefix []byte,
+// 	// VPN Prefix mask
+// 	mask int,
+// 	// VPN Prefix's Next hop address
+// 	nhPrefix []byte,
+// 	// Autonomous Systen Number
+// 	asn int,
+// 	// VPN Prefix's Route Distinguisher
+// 	rd *any.Any,
+// 	// VPN Prefix's Route Targets
+// 	rt *any.Any,
+// 	// VPN Prefix's VPN label
+// 	vpnLabel int) error {
+// 	req := &pbapi.VPNv4Prefix{
+// 		Prefix: []*pbapi.VPNPrefix{
+// 			{
+// 				Prefix: &pbapi.Prefix{
+// 					Address:    prefix,
+// 					MaskLength: uint32(mask),
+// 				},
+// 				VpnLabel:  uint32(vpnLabel),
+// 				NhAddress: nhPrefix,
+// 				Asn:       uint32(asn),
+// 				Rd:        rd,
+// 				Rt: []*any.Any{
+// 					rt,
+// 				},
+// 			},
+// 		},
+// 	}
+// 	// Sending request to program VPNv4 Prefix
+// 	//	_, err := gwclient.AdvBGPVPNv4(ctx, req)
 
-	return err
-}
-
-func advertiseLUPrefix(ctx context.Context,
-	gwclient pbapi.GatewayServiceClient,
-	// LU prefix
-	prefix []byte,
-	// LU Prefix's mask
-	mask int,
-	// Unicast Label
-	ucastLabel int) error {
-	req := &pbapi.LabeledUnicastPrefix{
-		Prefix: []*pbapi.LUPrefix{
-			{
-				Prefix: &pbapi.Prefix{
-					Address:    prefix,
-					MaskLength: uint32(mask),
-				},
-				UcastLabel: uint32(ucastLabel),
-			},
-		},
-	}
-	// Sending request to program VPNv4 Prefix
-	_, err := gwclient.AdvLUPrefix(ctx, req)
-
-	return err
-}
+// 	return err
+// }
 
 func getPrefixAndMask(addr string) ([]byte, int, error) {
 	if _, pr, err := net.ParseCIDR(addr); err == nil {
