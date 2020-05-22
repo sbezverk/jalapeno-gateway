@@ -13,4 +13,8 @@ message BGPPath {
   OriginAttribute origin = 3;
 }
 
-message IPv6UnicastRoute { repeated BGPPath path = 1; }
+message IPv6UnicastRoute {
+  // id is a unique identificator of a gateway client.
+  bytes id = 1;
+  repeated BGPPath path = 2;
+}

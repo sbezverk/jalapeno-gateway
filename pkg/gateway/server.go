@@ -84,6 +84,12 @@ func (g *gateway) Monitor(c pbapi.GatewayService_MonitorServer) error {
 			// Error indicates that the client is no longer functional, sending command to
 			// the clients manager to remove the client and exit
 			glog.V(5).Infof("client with id %s is no longer alive, error: %+v, deleting it from the store.", string(cm.Id), err)
+			c := g.clientMgmt.Get(string(cm.Id))
+			for _, f := range c.GetRouteCleanup() {
+				if err := f(); err != nil {
+					glog.Errorf("route cleanup encountered error: %+v", err)
+				}
+			}
 			g.clientMgmt.Delete(string(cm.Id))
 			return err
 		}
