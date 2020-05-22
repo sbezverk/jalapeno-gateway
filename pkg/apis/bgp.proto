@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "base.proto";
+
+package apis;
+
+message NextHopAttribute { string next_hop = 1; }
+message OriginAttribute { uint32 origin = 1; }
+
+message BGPPath {
+  apis.Prefix prefix = 1;
+  NextHopAttribute next_hop = 2;
+  OriginAttribute origin = 3;
+}
+
+message IPv6UnicastRoute { repeated BGPPath path = 1; }
