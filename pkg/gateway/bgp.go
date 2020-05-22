@@ -24,7 +24,7 @@ func (g *gateway) AddIPv6UnicatRoute(ctx context.Context, req *pbapi.IPv6Unicast
 		return nil, fmt.Errorf("gateway bgp interface is not initialized")
 	}
 
-	return nil, bgpi.AddIPv6UnicatRoute(ctx, req.Path)
+	return &empty.Empty{}, bgpi.AddIPv6UnicatRoute(ctx, req.Path)
 }
 
 func (g *gateway) DelIPv6UnicatRoute(ctx context.Context, req *pbapi.IPv6UnicastRoute) (*empty.Empty, error) {
@@ -40,5 +40,5 @@ func (g *gateway) DelIPv6UnicatRoute(ctx context.Context, req *pbapi.IPv6Unicast
 		return nil, fmt.Errorf("gateway bgp interface is not initialized")
 	}
 
-	return nil, bgpi.DelIPv6UnicatRoute(ctx, req.Path)
+	return &empty.Empty{}, bgpi.DelIPv6UnicatRoute(ctx, req.Path)
 }

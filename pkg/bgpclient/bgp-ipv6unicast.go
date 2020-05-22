@@ -51,8 +51,8 @@ func validateIPv6Prefix(p *pbapi.BGPPath) error {
 	if p.Prefix.MaskLength <= 0 || p.Prefix.MaskLength > 128 {
 		return fmt.Errorf("invalid mask length %d", p.Prefix.MaskLength)
 	}
-	if net.ParseIP(p.NextHop.String()).To16() == nil {
-		return fmt.Errorf("invalid next hop address %s", p.NextHop.String())
+	if net.ParseIP(p.NextHop.NextHop).To16() == nil {
+		return fmt.Errorf("invalid next hop address %s", p.NextHop.NextHop)
 	}
 	switch p.Origin.Origin {
 	case 0:
