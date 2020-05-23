@@ -43,4 +43,6 @@ service GatewayService {
   rpc SRv6L3VPN(L3VpnRequest) returns (SRv6L3Response);
   rpc AddIPv6UnicatRoute(IPv6UnicastRoute) returns (google.protobuf.Empty);
   rpc DelIPv6UnicatRoute(IPv6UnicastRoute) returns (google.protobuf.Empty);
+  rpc AddSRv6L3Route(SRv6L3Route) returns (google.protobuf.Empty);
+  rpc DelSRv6L3Route(SRv6L3Route) returns (google.protobuf.Empty);
 }

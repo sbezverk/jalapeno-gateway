@@ -64,3 +64,9 @@ message SRv6L3Prefix {
   // VPN Prefix's Prefix SID
   PrefixSID prefix_sid = 7;
 }
+
+message SRv6L3Route {
+  // id is a unique identificator of a gateway client.
+  bytes id = 1;
+  repeated SRv6L3Prefix path = 2;
+}

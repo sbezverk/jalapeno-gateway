@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/empty"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -51,4 +52,51 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	return &pbapi.SRv6L3Response{
 		Srv6Prefix: rs.Prefix,
 	}, nil
+}
+
+func (g *gateway) AddSRv6L3Route(ctx context.Context, req *pbapi.SRv6L3Route) (*empty.Empty, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		client := md.Get("CLIENT_IP")
+		if len(client) != 0 {
+			glog.Infof("Add SRv6 L3 Route request from client: %+v", client)
+		}
+	}
+	bgpi, ok := g.bgp.GetClientInterface().(bgpclient.BGPServices)
+	if !ok {
+		return nil, fmt.Errorf("gateway bgp interface is not initialized")
+	}
+	if err := bgpi.AddSRv6L3Route(ctx, req.Path); err != nil {
+		return nil, err
+	}
+	// Request to programm SRv6 L3 route succeeded, next is to check if the request came from a monitored
+	// client, if it is the case, then store programmed prefixes in the client's info to delete them after
+	// the client is reported as gone.
+	c := g.clientMgmt.Get(string(req.Id))
+	if c == nil {
+		// Request came from a non monitored client
+		return &empty.Empty{}, nil
+	}
+	// Add callback to delete all programmed routes
+	c.AddRouteCleanup(func() error {
+		return bgpi.DelSRv6L3Route(context.TODO(), req.Path)
+	})
+
+	return &empty.Empty{}, nil
+}
+
+func (g *gateway) DelSRv6L3Route(ctx context.Context, req *pbapi.SRv6L3Route) (*empty.Empty, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		client := md.Get("CLIENT_IP")
+		if len(client) != 0 {
+			glog.Infof("Delete SRv6 L3 Route request from client: %+v", client)
+		}
+	}
+	bgpi, ok := g.bgp.GetClientInterface().(bgpclient.BGPServices)
+	if !ok {
+		return nil, fmt.Errorf("gateway bgp interface is not initialized")
+	}
+
+	return &empty.Empty{}, bgpi.DelSRv6L3Route(ctx, req.Path)
 }
