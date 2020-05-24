@@ -83,11 +83,11 @@ func (bgp *bgpClient) addSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 		Prefix:    net.IP(p.Prefix.Address).To4().String(),
 	})
 	// Origin attribute
-	a21, _ := ptypes.MarshalAny(&api.OriginAttribute{
+	origin, _ := ptypes.MarshalAny(&api.OriginAttribute{
 		Origin: 0,
 	})
 	// Next hop attribute
-	a22, _ := ptypes.MarshalAny(&api.NextHopAttribute{
+	nh, _ := ptypes.MarshalAny(&api.NextHopAttribute{
 		NextHop: net.IP(p.NhAddress).To16().String(),
 	})
 	// Extended communities attribute
@@ -98,7 +98,7 @@ func (bgp *bgpClient) addSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 	prefixSID, _ := ptypes.MarshalAny(&api.PrefixSID{
 		Tlvs: p.PrefixSid.Tlvs,
 	})
-	attrs := []*any.Any{a21, a22, rt, prefixSID}
+	attrs := []*any.Any{origin, nh, rt, prefixSID}
 	if _, err := bgp.client.AddPath(context.TODO(), &api.AddPathRequest{
 		TableType: api.TableType_GLOBAL,
 		Path: &api.Path{
@@ -127,11 +127,11 @@ func (bgp *bgpClient) delSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 		Prefix:    net.IP(p.Prefix.Address).To4().String(),
 	})
 	// Origin attribute
-	a21, _ := ptypes.MarshalAny(&api.OriginAttribute{
+	origin, _ := ptypes.MarshalAny(&api.OriginAttribute{
 		Origin: 0,
 	})
 	// Next hop attribute
-	a22, _ := ptypes.MarshalAny(&api.NextHopAttribute{
+	nh, _ := ptypes.MarshalAny(&api.NextHopAttribute{
 		NextHop: net.IP(p.NhAddress).To16().String(),
 	})
 	// Extended communities attribute
@@ -142,7 +142,7 @@ func (bgp *bgpClient) delSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 	prefixSID, _ := ptypes.MarshalAny(&api.PrefixSID{
 		Tlvs: p.PrefixSid.Tlvs,
 	})
-	attrs := []*any.Any{a21, a22, rt, prefixSID}
+	attrs := []*any.Any{origin, nh, rt, prefixSID}
 	if _, err := bgp.client.DeletePath(context.TODO(), &api.DeletePathRequest{
 		TableType: api.TableType_GLOBAL,
 		Path: &api.Path{
