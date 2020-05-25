@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	api "github.com/osrg/gobgp/api"
@@ -25,7 +24,7 @@ func (bgp *bgpClient) AddSRv6L3Route(ctx context.Context, path []*pbapi.SRv6L3Pr
 	return nil
 }
 
-func (bgp *bgpClient) DelSRv6Route(ctx context.Context, path []*pbapi.SRv6L3Prefix) error {
+func (bgp *bgpClient) DelSRv6L3Route(ctx context.Context, path []*pbapi.SRv6L3Prefix) error {
 	for _, p := range path {
 		if err := validateSRv6L3Route(p); err != nil {
 			return err
@@ -42,7 +41,6 @@ func validateSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 	if p == nil {
 		return fmt.Errorf("prefix is nil")
 	}
-	glog.Infof("srv6 l3 prefix: %+v", *p)
 	// Validating IP address
 	if p.Prefix == nil {
 		return fmt.Errorf("prefix is nil")

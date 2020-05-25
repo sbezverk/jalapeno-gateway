@@ -2,6 +2,10 @@ package bgpclient
 
 import (
 	"fmt"
+	"math"
+	"net"
+	"strconv"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/glog"
@@ -329,4 +333,49 @@ func UnmarshalSRv6SubSubTLVs(stlvs map[uint32]*api.SRv6TLV) (map[uint8][]srv6.Su
 	}
 
 	return mtlvs, nil
+}
+
+// MarshalRDFromString marshals Route Distinguisher into Protobuf Any.any format
+func MarshalRDFromString(rd string) (*any.Any, error) {
+	if err := RDValidator(rd); err != nil {
+		return nil, err
+	}
+	// Sice passed RD got already validated, it is safe to ignore any error processing
+	parts := strings.Split(rd, ":")
+	if net.ParseIP(parts[0]).To4() != nil {
+		// If parts[0] is a valid IP, then it is IP:Value
+		n, _ := strconv.Atoi(parts[1])
+		return MarshalRD(bgp.NewRouteDistinguisherIPAddressAS(parts[0], uint16(n))), nil
+	}
+	n1, _ := strconv.Atoi(parts[0])
+	n2, _ := strconv.Atoi(parts[1])
+	if n1 < math.MaxUint16 {
+		// If parts[0] is less than MaxUint16, then it is 2 Bytes ASN: 4 Bytes Value
+		return MarshalRD(bgp.NewRouteDistinguisherTwoOctetAS(uint16(n1), uint32(n2))), nil
+	}
+	// Since no match before then, it is 4 Bytes ASN: 2 Bytes Value
+	return MarshalRD(bgp.NewRouteDistinguisherFourOctetAS(uint32(n1), uint16(n2))), nil
+}
+
+// MarshalRTFromString marshals Route Target into Protobuf Any.any format
+func MarshalRTFromString(rt string) (*any.Any, error) {
+	if err := RTValidator(rt); err != nil {
+		return nil, err
+	}
+	// Sice passed RD got already validated, it is safe to ignore any error processing
+	parts := strings.Split(rt, ":")
+	if net.ParseIP(parts[0]).To4() != nil {
+		// If parts[0] is a valid IP, then it is IP:Value
+		n, _ := strconv.Atoi(parts[1])
+		return MarshalRT(bgp.NewIPv4AddressSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, parts[0], uint16(n), true)), nil
+	}
+	n1, _ := strconv.Atoi(parts[0])
+	n2, _ := strconv.Atoi(parts[1])
+	if n1 < math.MaxUint16 {
+		// If parts[0] is less than MaxUint16, then it is 2 Bytes ASN: 4 Bytes Value
+		return MarshalRT(bgp.NewTwoOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint16(n1), uint32(n2), true)), nil
+	}
+
+	// Since no match before then, it is 4 Bytes ASN: 2 Bytes Value
+	return MarshalRT(bgp.NewFourOctetAsSpecificExtended(bgp.EC_SUBTYPE_ROUTE_TARGET, uint32(n1), uint16(n2), true)), nil
 }

@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/sbezverk/gobmp/pkg/bgp"
 	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
@@ -125,13 +127,32 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 				MaskLength: uint32(r.PrefixLen),
 			},
 			Label:     int32(r.Labels[0]),
-			NhAddress: []byte(r.Nexthop),
+			NhAddress: net.ParseIP(r.Nexthop).To16(),
 			PrefixSid: &pbapi.PrefixSID{},
 		}
-		if asn, err := strconv.Atoi(r.OriginAS); err == nil {
-			p.Asn = uint32(asn)
+		asn, err := strconv.Atoi(r.OriginAS)
+		if err != nil {
+			continue
 		}
+		p.Asn = uint32(asn)
 		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
+		rd, err := bgpclient.MarshalRDFromString(r.VPNRD)
+		if err != nil {
+			continue
+		}
+		p.Rd = rd
+		rts := make([]*any.Any, 0)
+		for _, extcomm := range strings.Split(r.BaseAttributes.ExtCommunityList, ",") {
+			if !strings.HasPrefix(extcomm, "rt=") {
+				continue
+			}
+			rt, err := bgpclient.MarshalRTFromString(strings.Split(extcomm, "=")[1])
+			if err != nil {
+				continue
+			}
+			rts = append(rts, rt)
+		}
+		p.Rt = rts
 		srv6Prefix = append(srv6Prefix, p)
 	}
 	resp.Prefix = srv6Prefix

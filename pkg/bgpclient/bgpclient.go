@@ -35,6 +35,8 @@ type bgpClient struct {
 	client api.GobgpApiClient
 }
 
+var _ BGPClient = &bgpClient{}
+
 func (bgp *bgpClient) Connector(addr string) error {
 	conn, err := grpc.DialContext(context.TODO(), addr, grpc.WithInsecure())
 	if err != nil {
