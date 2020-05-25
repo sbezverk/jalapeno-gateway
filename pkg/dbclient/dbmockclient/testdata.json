@@ -1,7 +1,7 @@
 [
     {
       "base_attrs": {
-        "ext_community_list": "rt=5:65003"
+        "ext_community_list": "rt=5:65003,rt=5:65030,color=137473"
       },
       "prefix": "192.168.5.1",
       "prefix_len": 32,
@@ -10,7 +10,7 @@
       "nexthop": "192:168:5::3",
       "is_nexthop_ipv4": false,
       "labels": [
-        1040
+        131070
       ],
       "vpn_rd": "100:100",
       "vpn_rd_type": 0,
@@ -49,7 +49,7 @@
       "nexthop": "192:168:5::4",
       "is_nexthop_ipv4": false,
       "labels": [
-        1040
+        262140
       ],
       "vpn_rd": "100:100",
       "vpn_rd_type": 0,
@@ -88,7 +88,7 @@
       "nexthop": "192:168:5::4",
       "is_nexthop_ipv4": false,
       "labels": [
-        1040
+        196605
       ],
       "vpn_rd": "101:101",
       "vpn_rd_type": 0,
@@ -130,5 +130,59 @@
           }
         }
       }
+    },
+    {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65010"
+        },
+        "prefix": "192.168.5.10",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65004",
+        "nexthop": "192:168:5::10",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          65535
+        ],
+        "vpn_rd": "105:105",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:10::",
+                  "endpoint_behavior": 17,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                },
+                {
+                  "sid": "2001:0:5:11::",
+                  "endpoint_behavior": 17,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
     }
-  ]
+]

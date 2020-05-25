@@ -28,7 +28,7 @@ var (
 	dbAddr       string
 	bgpAddr      string
 	gatewayPort  string
-	mockdata     bool
+	mockdata     string
 	mockDataPath string
 )
 
@@ -36,13 +36,19 @@ func init() {
 	flag.StringVar(&dbAddr, "database-address", "", "{dns name}:port or X.X.X.X:port of the graph database, for example: arangodb.jalapeno:8529")
 	flag.StringVar(&bgpAddr, "gobgp-address", "", "{dns name}:port or X.X.X.X:port of the gobgp daemon, for example: gobgpd:5051")
 	flag.StringVar(&gatewayPort, "gateway-port", "", "internal container port used by Jalapeno Gateway gRPC server")
-	flag.BoolVar(&mockdata, "mock-data", false, "when set to true, uses file testdata.json as a database source")
+	flag.StringVar(&mockdata, "mock-data", "false", "when set to true, uses file testdata.json as a database source")
 	flag.StringVar(&mockDataPath, "mock-data-path", "/", "location of testdata.json file")
 }
 
 func main() {
 	flag.Parse()
 	flag.Set("logtostderr", "true")
+
+	isMock, err := strconv.ParseBool(mockdata)
+	if err != nil {
+		glog.Errorf("invalid mock-data parameter: %s", mockdata)
+		os.Exit(1)
+	}
 
 	grpcPort := defaultGatewayPort
 	if gatewayPort != "" {
@@ -60,13 +66,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if dbAddr == "" && !mockdata {
+	if dbAddr == "" && !isMock {
 		glog.Errorf("database address cannot be ''")
 		os.Exit(1)
 	}
 
 	var dbc srvclient.SrvClient
-	if !mockdata {
+	if !isMock {
 		// dbc, err = makeDBClient(dbAddr)
 		// if err != nil {
 		// 	glog.Errorf("failed to make db client with with error: %+v", err)
@@ -79,6 +85,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
 	// In general it is possible to run without gpbgp process, if it is not specified
 	// then corresponding client process will not be started
 	var bgp srvclient.SrvClient
@@ -125,6 +132,7 @@ func makeBGPClient(addr string) (srvclient.SrvClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new bgp client with error: %w", err)
 	}
+
 	return bgp, nil
 }
 

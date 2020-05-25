@@ -25,6 +25,8 @@ type BGPClient interface {
 type BGPServices interface {
 	AddIPv6UnicatRoute(context.Context, []*pbapi.BGPPath) error
 	DelIPv6UnicatRoute(context.Context, []*pbapi.BGPPath) error
+	AddSRv6L3Route(context.Context, []*pbapi.SRv6L3Prefix) error
+	DelSRv6L3Route(context.Context, []*pbapi.SRv6L3Prefix) error
 }
 
 type bgpClient struct {
@@ -32,6 +34,8 @@ type bgpClient struct {
 	conn   *grpc.ClientConn
 	client api.GobgpApiClient
 }
+
+var _ BGPClient = &bgpClient{}
 
 func (bgp *bgpClient) Connector(addr string) error {
 	conn, err := grpc.DialContext(context.TODO(), addr, grpc.WithInsecure())

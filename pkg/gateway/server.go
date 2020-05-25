@@ -72,11 +72,12 @@ func (g *gateway) Monitor(c pbapi.GatewayService_MonitorServer) error {
 	}
 	glog.V(5).Infof("request from client with id %s to monitor.", string(cm.Id))
 	if m := g.clientMgmt.Get(string(cm.Id)); m == nil {
-		glog.V(5).Infof("adding client with id %s to the store.", string(cm.Id))
 		g.clientMgmt.Add(string(cm.Id))
+		glog.V(5).Infof("adding client with id %s to the store.", string(cm.Id))
 	} else {
-		// TODO add handling of such condition
+		// TODO add better handling of such condition
 		glog.Warningf("duplicate monitor request, client with id: %s already in the store", string(cm.Id))
+		return err
 	}
 	for {
 		_, err := c.Recv()
