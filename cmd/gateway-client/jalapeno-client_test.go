@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 )
 
 func TestValidateRD(t *testing.T) {
@@ -37,7 +39,7 @@ func TestValidateRD(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		err := validateRD(tt.rd)
+		err := bgpclient.RDValidator(tt.rd)
 		if err != nil && !tt.fail {
 			t.Errorf("test \"%s\" failed as expected to succeed but fail with error: %+v", tt.name, err)
 		}
