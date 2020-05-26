@@ -169,10 +169,9 @@ func MarshalSRv6SubTLVs(tlvs map[uint8][]srv6.SubTLV) map[uint32]*api.SRv6TLV {
 				o := &api.SRv6InformationSubTLV{
 					Flags: &api.SRv6SIDFlags{},
 				}
-
 				o.EndpointBehavior = uint32(infoS.EndpointBehavior)
-				o.Sid = make([]byte, len(infoS.SID))
-				copy(o.Sid, infoS.SID)
+				o.Sid = make([]byte, 16)
+				copy(o.Sid, []byte(net.ParseIP(infoS.SID).To16()))
 				o.SubSubTlvs = MarshalSRv6SubSubTLVs(infoS.SubSubTLVs)
 				r = o
 				a, _ := ptypes.MarshalAny(r)
@@ -274,7 +273,7 @@ func UnmarshalSRv6SubTLVs(stlvs map[uint32]*api.SRv6TLV) (map[uint8][]srv6.SubTL
 				o.EndpointBehavior = uint16(v.EndpointBehavior)
 				// TODO Once Flags are finalized in RFC, populate its value
 				o.Flags = 0
-				o.SID = string(v.Sid)
+				o.SID = net.IP(v.Sid).To16().String()
 				o.SubSubTLVs, err = UnmarshalSRv6SubSubTLVs(v.SubSubTlvs)
 				if err != nil {
 					continue

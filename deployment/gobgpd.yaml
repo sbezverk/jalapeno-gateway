@@ -89,7 +89,7 @@ spec:
             - name: config-volume
               mountPath: /config
       nodeSelector:
-        jalapeno.io/infra-app: bgp-speaker
+        jalapeno.io/infra-app-bgp: bgp-speaker
       volumes:
         - name: config-volume
           configMap:
