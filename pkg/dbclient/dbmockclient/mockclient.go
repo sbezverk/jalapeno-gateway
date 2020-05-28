@@ -119,11 +119,10 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		return &resp, nil
 	}
 
-	glog.Infof("number of prefixes retrieved: %d", len(records))
 	for _, r := range records {
 		p := &pbapi.SRv6L3Prefix{
 			Prefix: &pbapi.Prefix{
-				Address:    []byte(r.Prefix),
+				Address:    net.ParseIP(r.Prefix).To4(),
 				MaskLength: uint32(r.PrefixLen),
 			},
 			Label:     int32(r.Labels[0]),
