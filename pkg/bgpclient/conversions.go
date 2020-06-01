@@ -64,19 +64,19 @@ func MarshalRD(rd bgp.RouteDistinguisherInterface) *any.Any {
 	var r proto.Message
 	switch v := rd.(type) {
 	case *bgp.RouteDistinguisherTwoOctetAS:
-		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(6).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherTwoOctetAS{
 			Admin:    uint32(v.Admin),
 			Assigned: v.Assigned,
 		}
 	case *bgp.RouteDistinguisherIPAddressAS:
-		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(6).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherIPAddress{
 			Admin:    v.Admin.String(),
 			Assigned: uint32(v.Assigned),
 		}
 	case *bgp.RouteDistinguisherFourOctetAS:
-		glog.V(5).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
+		glog.V(6).Infof("Admin: %+v Assigned: %+v", v.Admin, v.Assigned)
 		r = &api.RouteDistinguisherFourOctetAS{
 			Admin:    v.Admin,
 			Assigned: uint32(v.Assigned),
