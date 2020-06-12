@@ -3,11 +3,11 @@
       "base_attrs": {
         "ext_community_list": "rt=5:65003,rt=5:65030,color=137473"
       },
-      "prefix": "192.168.5.1",
+      "prefix": "192.168.5.3",
       "prefix_len": 32,
       "is_ipv4": true,
       "origin_as": "65003",
-      "nexthop": "2001:470:b16e:59::9",
+      "nexthop": "192:168:5::3",
       "is_nexthop_ipv4": false,
       "labels": [
         16640
@@ -46,7 +46,7 @@
       "prefix_len": 32,
       "is_ipv4": true,
       "origin_as": "65004",
-      "nexthop": "2001:470:b16e:59::9",
+      "nexthop": "192:168:5::4",
       "is_nexthop_ipv4": false,
       "labels": [
         16896
@@ -81,10 +81,10 @@
       "base_attrs": {
         "ext_community_list": "rt=5:65004"
       },
-      "prefix": "192.168.5.2",
+      "prefix": "192.168.5.9",
       "prefix_len": 32,
       "is_ipv4": true,
-      "origin_as": "65004",
+      "origin_as": "65009",
       "nexthop": "2001:470:b16e:59::9",
       "is_nexthop_ipv4": false,
       "labels": [
