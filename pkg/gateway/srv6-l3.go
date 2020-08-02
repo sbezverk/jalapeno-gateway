@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -23,15 +24,39 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	// Check if Database interface is available, if not then there is no reason to do any processing
 	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
 	if !ok {
-		return nil, fmt.Errorf("request failed, BGP service is not available")
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, BGP service is not available")
 	}
-	// Check if RD is present in the request, if not return error as RD is a mandatory parameter
-	if req.Rd == nil {
-		return nil, fmt.Errorf("request failed, RD is nil")
+
+	// RD, VPN Name or RTs can be used as primary selection criteria, one of them must be
+	// present in the request.
+	if req.Rd == nil && req.VpnName == "" && len(req.Rt) == 0 {
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, at leat one of RD or VPN name or RTs defined")
 	}
-	rd, err := bgpclient.UnmarshalRD(req.Rd)
-	if err != nil {
-		return &pbapi.SRv6L3Response{}, err
+	// Check each attribute and prepare it for NewL3VpnReq call
+	var rd bgp.RouteDistinguisherInterface
+	var err error
+	m := "SRv6 L3 request for "
+	if req.VpnName != "" {
+		m += "VPN Name: " + req.VpnName
+	}
+	if req.Rd != nil {
+		rd, err = bgpclient.UnmarshalRD(req.Rd)
+		if err != nil {
+			return &pbapi.SRv6L3Response{}, err
+		}
+		m += "RD: " + rd.String()
+	}
+	var rts []string
+	if len(req.Rt) != 0 {
+		rt, err := bgpclient.UnmarshalRT(req.Rt)
+		if err != nil {
+			return &pbapi.SRv6L3Response{}, err
+		}
+		m += "RTs: "
+		for _, r := range rt {
+			rts = append(rts, r.String())
+			m += r.String() + " "
+		}
 	}
 	// Check for an optional prefix
 	var addr string
@@ -39,10 +64,10 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	if req.VpnPrefix != nil {
 		addr = net.IP(req.VpnPrefix.Address).String()
 		mask = int(req.VpnPrefix.MaskLength)
-		glog.V(5).Infof("SRv6 L3 request for prefix: %s/%d", addr, mask)
+		m += fmt.Sprintf("VPN Prefix: %s/%d", addr, mask)
 	}
-	glog.V(5).Infof("SRv6 L3 request for RD: %s", rd.String())
-	rq := dbclient.NewL3VpnReq(rd.String(), nil, req.Ipv4, addr, uint32(mask))
+	glog.V(5).Infof("%s", m)
+	rq := dbclient.NewL3VpnReq(req.VpnName, rd.String(), rts, req.Ipv4, addr, uint32(mask))
 
 	rs, err := dbi.SRv6L3VpnRequest(context.TODO(), rq)
 	if err != nil {

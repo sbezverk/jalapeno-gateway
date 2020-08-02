@@ -24,6 +24,7 @@ type DBServices interface {
 
 // L3VpnReq defines data struct for L3 VPN database request
 type L3VpnReq struct {
+	Name       string
 	RD         string
 	IPv4       bool
 	RT         []string
@@ -58,15 +59,13 @@ type SRv6L3VpnResp struct {
 }
 
 // NewL3VpnReq instantiates a L3 VPN Databse Request object
-func NewL3VpnReq(rd string, rt []string, ipv4 bool, prefix string, masklength uint32) *L3VpnReq {
+func NewL3VpnReq(name string, rd string, rt []string, ipv4 bool, prefix string, masklength uint32) *L3VpnReq {
 	r := L3VpnReq{
 		IPv4: ipv4,
+		Name: name,
 	}
 	r.RD = rd
-	if len(rt) != 0 {
-		r.RT = make([]string, len(rt))
-		copy(r.RT, rt)
-	}
+	r.RT = rt
 	if prefix != "" {
 		r.Prefix = prefix
 		if masklength != 0 {
