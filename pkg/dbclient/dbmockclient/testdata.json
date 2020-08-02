@@ -1,18 +1,18 @@
 [
     {
       "base_attrs": {
-        "ext_community_list": "rt=5:65003,rt=5:65030,color=137473"
+        "ext_community_list": "rt=5:65003,rt=5:65030,color=577333"
       },
-      "prefix": "192.168.5.3",
-      "prefix_len": 32,
+      "prefix": "13.13.13.0",
+      "prefix_len": 30,
       "is_ipv4": true,
       "origin_as": "65003",
       "nexthop": "192:168:5::3",
       "is_nexthop_ipv4": false,
       "labels": [
-        16640
+        17152
       ],
-      "vpn_rd": "100:100",
+      "vpn_rd": "5070:65033",
       "vpn_rd_type": 0,
       "prefix_sid": {
         "srv6_l3_service": {
@@ -39,19 +39,58 @@
       }
     },
     {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65003,rt=5:65030,color=577333"
+        },
+        "prefix": "192.168.5.1",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65003",
+        "nexthop": "192:168:5::3",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          17664
+        ],
+        "vpn_rd": "5070:65033",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:3::",
+                  "endpoint_behavior": 19,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+    },
+    {
       "base_attrs": {
-        "ext_community_list": "rt=5:65004"
+        "ext_community_list": "rt=5:65003,rt=5:65030,color=577333"
       },
-      "prefix": "192.168.5.4",
-      "prefix_len": 32,
+      "prefix": "24.24.24.0",
+      "prefix_len": 30,
       "is_ipv4": true,
       "origin_as": "65004",
       "nexthop": "192:168:5::4",
       "is_nexthop_ipv4": false,
       "labels": [
-        16896
+        16640
       ],
-      "vpn_rd": "100:100",
+      "vpn_rd": "5070:65033",
       "vpn_rd_type": 0,
       "prefix_sid": {
         "srv6_l3_service": {
@@ -59,60 +98,6 @@
             "1": [
               {
                 "sid": "2001:0:5:4::",
-                "endpoint_behavior": 19,
-                "sub_sub_tlvs": {
-                  "1": [
-                    {
-                      "local_block_length": 40,
-                      "local_node_length": 24,
-                      "function_length": 16,
-                      "transposition_length": 16,
-                      "transposition_offset": 64
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "base_attrs": {
-        "ext_community_list": "rt=5:65004"
-      },
-      "prefix": "192.168.5.9",
-      "prefix_len": 32,
-      "is_ipv4": true,
-      "origin_as": "65009",
-      "nexthop": "2001:470:b16e:59::9",
-      "is_nexthop_ipv4": false,
-      "labels": [
-        17152
-      ],
-      "vpn_rd": "101:101",
-      "vpn_rd_type": 0,
-      "prefix_sid": {
-        "srv6_l3_service": {
-          "sub_tlvs": {
-            "1": [
-              {
-                "sid": "2001:0:5:4::",
-                "endpoint_behavior": 19,
-                "sub_sub_tlvs": {
-                  "1": [
-                    {
-                      "local_block_length": 40,
-                      "local_node_length": 24,
-                      "function_length": 16,
-                      "transposition_length": 16,
-                      "transposition_offset": 64
-                    }
-                  ]
-                }
-              },
-              {
-                "sid": "2001:0:5:41::",
                 "endpoint_behavior": 19,
                 "sub_sub_tlvs": {
                   "1": [
@@ -133,40 +118,25 @@
     },
     {
         "base_attrs": {
-          "ext_community_list": "rt=5:65010"
+          "ext_community_list": "rt=5:65003,rt=5:65030,color=577333"
         },
-        "prefix": "192.168.5.10",
+        "prefix": "192.168.5.2",
         "prefix_len": 32,
         "is_ipv4": true,
         "origin_as": "65004",
-        "nexthop": "2001:470:b16e:59::9",
+        "nexthop": "192:168:5::4",
         "is_nexthop_ipv4": false,
         "labels": [
-          17408
+          16896
         ],
-        "vpn_rd": "105:105",
+        "vpn_rd": "5070:65033",
         "vpn_rd_type": 0,
         "prefix_sid": {
           "srv6_l3_service": {
             "sub_tlvs": {
               "1": [
                 {
-                  "sid": "2001:0:5:10::",
-                  "endpoint_behavior": 19,
-                  "sub_sub_tlvs": {
-                    "1": [
-                      {
-                        "local_block_length": 40,
-                        "local_node_length": 24,
-                        "function_length": 16,
-                        "transposition_length": 16,
-                        "transposition_offset": 64
-                      }
-                    ]
-                  }
-                },
-                {
-                  "sid": "2001:0:5:11::",
+                  "sid": "2001:0:5:4::",
                   "endpoint_behavior": 19,
                   "sub_sub_tlvs": {
                     "1": [
@@ -184,5 +154,161 @@
             }
           }
         }
-    }
+    },
+    {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65002,rt=5:65020,color=577222"
+        },
+        "prefix": "3.2.2.1",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65002",
+        "nexthop": "192:168:5::3",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          16896
+        ],
+        "vpn_rd": "5070:65024",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:3::",
+                  "endpoint_behavior": 19,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65002,rt=5:65020,color=577222"
+        },
+        "prefix": "4.2.2.1",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65002",
+        "nexthop": "192:168:5::4",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          16384
+        ],
+        "vpn_rd": "5070:65024",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:4::",
+                  "endpoint_behavior": 19,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65004,rt=5:65040,color=577444"
+        },
+        "prefix": "3.4.4.1",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65004",
+        "nexthop": "192:168:5::3",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          17408
+        ],
+        "vpn_rd": "5070:65044",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:3::",
+                  "endpoint_behavior": 19,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "base_attrs": {
+          "ext_community_list": "rt=5:65004,rt=5:65040,color=577444"
+        },
+        "prefix": "4.4.4.1",
+        "prefix_len": 32,
+        "is_ipv4": true,
+        "origin_as": "65004",
+        "nexthop": "192:168:5::4",
+        "is_nexthop_ipv4": false,
+        "labels": [
+          17152
+        ],
+        "vpn_rd": "5070:65044",
+        "vpn_rd_type": 0,
+        "prefix_sid": {
+          "srv6_l3_service": {
+            "sub_tlvs": {
+              "1": [
+                {
+                  "sid": "2001:0:5:4::",
+                  "endpoint_behavior": 19,
+                  "sub_sub_tlvs": {
+                    "1": [
+                      {
+                        "local_block_length": 40,
+                        "local_node_length": 24,
+                        "function_length": 16,
+                        "transposition_length": 16,
+                        "transposition_offset": 64
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
 ]
