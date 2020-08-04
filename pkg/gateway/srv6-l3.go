@@ -67,7 +67,12 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 		m += fmt.Sprintf("VPN Prefix: %s/%d", addr, mask)
 	}
 	glog.V(5).Infof("%s", m)
-	rq := dbclient.NewL3VpnReq(req.VpnName, rd.String(), rts, req.Ipv4, addr, uint32(mask))
+	// Check if RD is not nil before getting its string representation
+	rds := ""
+	if rd != nil {
+		rds = rd.String()
+	}
+	rq := dbclient.NewL3VpnReq(req.VpnName, rds, rts, req.Ipv4, addr, uint32(mask))
 
 	rs, err := dbi.SRv6L3VpnRequest(context.TODO(), rq)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -96,7 +97,7 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 }
 
 func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
-	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for RD: %s", req.RD)
+	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for VRF Name: %s RD: %s RTs: %+v", req.Name, req.RD, req.RT)
 	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
 	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
@@ -154,7 +155,7 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 			continue
 		}
 		p.Asn = uint32(asn)
-		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
 		rd, err := bgpclient.MarshalRDFromString(r.RD)
 		if err != nil {
 			continue

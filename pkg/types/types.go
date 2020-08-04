@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 )
@@ -169,7 +168,7 @@ type SRv6L3Record struct {
 	Labels    []uint32        `json:"VPN_Label,omitempty"`
 	RD        string          `json:"RD,omitempty"`
 	RT        []string        `json:"RT,omitempty"`
-	PrefixSID *prefixsid.PSid `json:"SRv6_SID,omitempty"`
+	SRv6SID   *srv6.L3Service `json:"SRv6_SID,omitempty"`
 }
 
 // L3VpnReq defines data struct for L3 VPN database request
