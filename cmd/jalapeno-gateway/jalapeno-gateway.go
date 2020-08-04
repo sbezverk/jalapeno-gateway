@@ -25,11 +25,10 @@ const (
 )
 
 var (
-	dbAddr       string
-	bgpAddr      string
-	gatewayPort  string
-	mockdata     string
-	mockDataPath string
+	dbAddr      string
+	bgpAddr     string
+	gatewayPort string
+	mockdata    string
 )
 
 func init() {
@@ -37,7 +36,6 @@ func init() {
 	flag.StringVar(&bgpAddr, "gobgp-address", "", "{dns name}:port or X.X.X.X:port of the gobgp daemon, for example: gobgpd:5051")
 	flag.StringVar(&gatewayPort, "gateway-port", "", "internal container port used by Jalapeno Gateway gRPC server")
 	flag.StringVar(&mockdata, "mock-data", "false", "when set to true, uses file testdata.json as a database source")
-	flag.StringVar(&mockDataPath, "mock-data-path", "/", "location of testdata.json file")
 }
 
 func main() {
@@ -79,7 +77,7 @@ func main() {
 		// 	os.Exit(1)
 		// }
 	} else {
-		dbc, err = makeMockDBClient(mockDataPath)
+		dbc, err = makeMockDBClient()
 		if err != nil {
 			glog.Errorf("failed to make db client with with error: %+v", err)
 			os.Exit(1)
@@ -106,9 +104,9 @@ func main() {
 	gSrv.Stop()
 }
 
-func makeMockDBClient(mockDataPath string) (srvclient.SrvClient, error) {
+func makeMockDBClient() (srvclient.SrvClient, error) {
 	// TODO, Authentication credentials should be passed as a parameters.
-	db, err := srvclient.NewSrvClient("", mock.NewMockDBClient(false, mockDataPath+"testdata.json"))
+	db, err := srvclient.NewSrvClient("", mock.NewMockDBClient())
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new Mock DB client with error: %w", err)
 	}

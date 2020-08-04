@@ -15,20 +15,49 @@ import (
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
+	"github.com/sbezverk/jalapeno-gateway/pkg/types"
+)
+
+const (
+	mplsDataFile = "./testdata/testdata-mpls.json"
+	srv6DataFile = "./testdata/testdata-srv6.json"
+	vrfDataFile  = "./testdata/vrfs_data.json"
 )
 
 type mockSrv struct {
-	vpnStore  map[string][]dbclient.MPLSL3Record
-	srv6Store map[string][]dbclient.SRv6L3Record
+	mplsStore []types.MPLSL3Record
+	srv6Store []types.SRv6L3Record
+	vrfStore  map[string]types.VRF
 }
 
-func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.MPLSL3VpnResp, error) {
+func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.MPLSL3VpnResp, error) {
 	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
-
-	// Initial lookup for requested RD, if it is not in the store, return error
-	records, ok := m.vpnStore[req.RD]
-	if !ok {
-		return nil, fmt.Errorf("RD %s is not found", req.RD)
+	records := make([]types.MPLSL3Record, 0)
+	vrfrts := make([]string, 0)
+	// Check for presence of primary selection criterias
+	switch {
+	case req.Name != "":
+		v, ok := m.vrfStore[req.Name]
+		if !ok {
+			// VRF name not found in the store, fail the request
+			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
+		}
+		// TODO refactor this monstrosity into a safe statement with checks
+		vrfrts = append(vrfrts, v.ConfigParameters.AddressFamilies[0].RouteTargets["core"]["import"]["native"]...)
+		records = m.mplsStore
+	case req.RD != "":
+		for _, r := range m.mplsStore {
+			if strings.Compare(r.RD, req.RD) == 0 {
+				records = append(records, r)
+			}
+		}
+		if len(records) == 0 {
+			// RD not found in the store, fail the request
+			return nil, fmt.Errorf("Route Distinguisher %s does not exist", req.RD)
+		}
+	case len(req.RT) != 0:
+	default:
+		return nil, fmt.Errorf("either a vrf name or a route distinguisher  must be specified in the request")
 	}
 
 	// Filter by IP Family
@@ -39,8 +68,8 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		records = filterByPrefix(req.Prefix, req.MaskLength, records)
 	}
 	// Filter by RT
-	if len(req.RT) != 0 {
-		records = filterByRT(req.RT, records)
+	if len(req.RT)+len(vrfrts) != 0 {
+		records = filterByRT(append(req.RT, vrfrts...), records)
 	}
 
 	if len(records) == 0 {
@@ -59,27 +88,55 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 			VpnLabel: r.VPN,
 		})
 	}
-	resp := dbclient.MPLSL3VpnResp{
+	resp := types.MPLSL3VpnResp{
 		Prefix: vpnPrefix,
 	}
 
 	return &resp, nil
 }
 
-func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) (*dbclient.SRv6L3VpnResp, error) {
+func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
 	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for RD: %s", req.RD)
 	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
-	resp := dbclient.SRv6L3VpnResp{
+	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
 	}
-	// Initial lookup for requested RD, if it is not in the store, return an empty response
-	records, ok := m.srv6Store[req.RD]
-	if !ok {
-		return &resp, nil
+	records := make([]types.SRv6L3Record, 0)
+	vrfrts := make([]string, 0)
+	// Check for presence of primary selection criterias
+	switch {
+	case req.Name != "":
+		v, ok := m.vrfStore[req.Name]
+		if !ok {
+			// VRF name not found in the store, fail the request
+			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
+		}
+		// TODO refactor this monstrosity into a safe statement with checks
+		vrfrts = append(vrfrts, v.ConfigParameters.AddressFamilies[0].RouteTargets["core"]["import"]["native"]...)
+		records = m.srv6Store
+	case req.RD != "":
+		for _, r := range m.srv6Store {
+			if strings.Compare(r.RD, req.RD) == 0 {
+				records = append(records, r)
+			}
+		}
+		if len(records) == 0 {
+			// RD not found in the store, fail the request
+			return nil, fmt.Errorf("Route Distinguisher %s does not exist", req.RD)
+		}
+	case len(req.RT) != 0:
+	default:
+		return nil, fmt.Errorf("either a vrf name or a route distinguisher or a route target must be specified in the request")
 	}
-	// All filtered, return an empty response
+
+	// Filter by RT
+	if len(req.RT)+len(vrfrts) != 0 {
+		records = filterByRTSRv6L3Record(append(req.RT, vrfrts...), records)
+	}
+
 	if len(records) == 0 {
-		return &resp, nil
+		// All filtered, returning error
+		return nil, fmt.Errorf("no matching records to found")
 	}
 
 	for _, r := range records {
@@ -104,16 +161,6 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		}
 		p.Rd = rd
 		rts := make([]*any.Any, 0)
-		// for _, extcomm := range strings.Split(r.BaseAttributes.ExtCommunityList, ",") {
-		// 	if !strings.HasPrefix(extcomm, "rt=") {
-		// 		continue
-		// 	}
-		// 	rt, err := bgpclient.MarshalRTFromString(strings.Split(extcomm, "=")[1])
-		// 	if err != nil {
-		// 		continue
-		// 	}
-		// 	rts = append(rts, rt)
-		// }
 		for _, s := range r.RT {
 			rt, err := bgpclient.MarshalRTFromString(s)
 			if err != nil {
@@ -142,8 +189,8 @@ func (m *mockSrv) Validator(addr string) error {
 	return nil
 }
 
-func filterByIPFamily(ipv4 bool, records []dbclient.MPLSL3Record) []dbclient.MPLSL3Record {
-	result := make([]dbclient.MPLSL3Record, 0)
+func filterByIPFamily(ipv4 bool, records []types.MPLSL3Record) []types.MPLSL3Record {
+	result := make([]types.MPLSL3Record, 0)
 	for _, r := range records {
 		if r.IPv4 == ipv4 {
 			result = append(result, r)
@@ -152,8 +199,8 @@ func filterByIPFamily(ipv4 bool, records []dbclient.MPLSL3Record) []dbclient.MPL
 
 	return result
 }
-func filterByPrefix(prefix string, mask uint32, records []dbclient.MPLSL3Record) []dbclient.MPLSL3Record {
-	result := make([]dbclient.MPLSL3Record, 0)
+func filterByPrefix(prefix string, mask uint32, records []types.MPLSL3Record) []types.MPLSL3Record {
+	result := make([]types.MPLSL3Record, 0)
 	for _, r := range records {
 		if r.Prefix == prefix && r.Mask == mask {
 			result = append(result, r)
@@ -165,8 +212,8 @@ func filterByPrefix(prefix string, mask uint32, records []dbclient.MPLSL3Record)
 	return result
 }
 
-func filterByRT(rts []string, records []dbclient.MPLSL3Record) []dbclient.MPLSL3Record {
-	result := make([]dbclient.MPLSL3Record, 0)
+func filterByRT(rts []string, records []types.MPLSL3Record) []types.MPLSL3Record {
+	result := make([]types.MPLSL3Record, 0)
 	match := 0
 	for _, r := range records {
 		for _, rrt := range strings.Split(r.RT, ",") {
@@ -187,61 +234,84 @@ func filterByRT(rts []string, records []dbclient.MPLSL3Record) []dbclient.MPLSL3
 	return result
 }
 
-// NewMockDBClient returns an instance of a new mock database client process
-func NewMockDBClient(mpls bool, fn ...string) dbclient.DBClient {
-	// Need to load test data
-	tfn := "./testdata.json"
-	if fn[0] != "" {
-		tfn = fn[0]
+func filterByRTSRv6L3Record(rts []string, records []types.SRv6L3Record) []types.SRv6L3Record {
+	result := make([]types.SRv6L3Record, 0)
+	found := false
+	for _, r := range records {
+		for _, ert := range r.RT {
+			for _, rrt := range rts {
+				if rrt == ert {
+					result = append(result, r)
+					found = true
+					break
+				}
+			}
+			if found {
+				found = false
+				break
+			}
+		}
 	}
-	d, err := os.Open(tfn)
+
+	return result
+}
+
+// NewMockDBClient returns an instance of a new mock database client process
+func NewMockDBClient() dbclient.DBClient {
+	// Need to load test data
+	mplsdata, err := readTestFile(mplsDataFile)
 	if err != nil {
-		glog.Errorf("failed to open %s with error: %+v", tfn, err)
 		return nil
+	}
+	srv6data, err := readTestFile(srv6DataFile)
+	if err != nil {
+		return nil
+	}
+	vrfdata, err := readTestFile(vrfDataFile)
+	if err != nil {
+		return nil
+	}
+
+	vrfs := make([]types.VRF, 0)
+	ds := mockSrv{
+		mplsStore: make([]types.MPLSL3Record, 0),
+		srv6Store: make([]types.SRv6L3Record, 0),
+		vrfStore:  make(map[string]types.VRF),
+	}
+
+	if err := json.Unmarshal(mplsdata, &ds.mplsStore); err != nil {
+		glog.Errorf("failed to unmarshal mpls test data with error: %+v", err)
+		return nil
+	}
+	if err := json.Unmarshal(srv6data, &ds.srv6Store); err != nil {
+		glog.Errorf("failed to unmarshal srv6 test data with error: %+v", err)
+		return nil
+	}
+	if err := json.Unmarshal(vrfdata, &vrfs); err != nil {
+		glog.Errorf("failed to unmarshal vrf test data with error: %+v", err)
+		return nil
+	}
+	for _, r := range vrfs {
+		ds.vrfStore[r.VRFName] = r
+	}
+
+	return &ds
+}
+
+func readTestFile(fn string) ([]byte, error) {
+	d, err := os.Open(fn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open %s with error: %+v", fn, err)
 	}
 	fi, err := d.Stat()
 	if err != nil {
-		glog.Errorf("failed to get file info of %s with error: %+v", tfn, err)
-		return nil
+		return nil, fmt.Errorf("failed to get file info of %s with error: %+v", fn, err)
 	}
 	l := fi.Size()
 	b := make([]byte, l)
 	if _, err := io.ReadFull(d, b); err != nil {
-		glog.Errorf("failed to read testdata.json with error: %+v", err)
-		return nil
-	}
-	vpn := make([]dbclient.MPLSL3Record, 0)
-	srv6 := make([]dbclient.SRv6L3Record, 0)
-	ds := mockSrv{
-		vpnStore:  make(map[string][]dbclient.MPLSL3Record),
-		srv6Store: make(map[string][]dbclient.SRv6L3Record),
-	}
-	if mpls {
-		if err := json.Unmarshal(b, &vpn); err != nil {
-			glog.Errorf("failed to unmarshal testdata with error: %+v", err)
-			return nil
-		}
-	} else {
-		if err := json.Unmarshal(b, &srv6); err != nil {
-			glog.Errorf("failed to unmarshal testdata with error: %+v", err)
-			return nil
-		}
-	}
-	if mpls {
-		for _, r := range vpn {
-			if _, ok := ds.vpnStore[r.RD]; !ok {
-				ds.vpnStore[r.RD] = make([]dbclient.MPLSL3Record, 0)
-			}
-			ds.vpnStore[r.RD] = append(ds.vpnStore[r.RD], r)
-		}
-	} else {
-		for _, r := range srv6 {
-			if _, ok := ds.srv6Store[r.RD]; !ok {
-				ds.srv6Store[r.RD] = make([]dbclient.SRv6L3Record, 0)
-			}
-			ds.srv6Store[r.RD] = append(ds.srv6Store[r.RD], r)
-		}
+		return nil, fmt.Errorf("failed to read %s with error: %+v", fn, err)
 	}
 
-	return &ds
+	return b, nil
 }

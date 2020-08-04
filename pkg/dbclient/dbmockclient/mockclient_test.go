@@ -3,7 +3,7 @@ package dbmockclient
 import (
 	"testing"
 
-	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
+	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
 
 func TestNewMockDBClient(t *testing.T) {
@@ -26,7 +26,7 @@ func TestNewMockDBClient(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dbi := NewMockDBClient(true, tt.testDataFile)
+			dbi := NewMockDBClient()
 			if dbi == nil {
 				if !tt.fail {
 					t.Error("supposed to succeed but failed")
@@ -44,7 +44,7 @@ func TestNewMockDBClient(t *testing.T) {
 func TestFilterByPrefix(t *testing.T) {
 	tests := []struct {
 		name    string
-		records []dbclient.MPLSL3Record
+		records []types.MPLSL3Record
 		prefix  string
 		mask    uint32
 		// expected defines a number of record left after filtering
@@ -52,7 +52,7 @@ func TestFilterByPrefix(t *testing.T) {
 	}{
 		{
 			name: "Match found",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					Prefix: "1.1.1.0",
 					Mask:   24,
@@ -72,7 +72,7 @@ func TestFilterByPrefix(t *testing.T) {
 		},
 		{
 			name: "Match not found",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					Prefix: "1.1.1.0",
 					Mask:   24,
@@ -92,7 +92,7 @@ func TestFilterByPrefix(t *testing.T) {
 		},
 		{
 			name: "Match found but mask does not match",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					Prefix: "1.1.1.0",
 					Mask:   24,
@@ -124,14 +124,14 @@ func TestFilterByPrefix(t *testing.T) {
 func TestFilterByRT(t *testing.T) {
 	tests := []struct {
 		name    string
-		records []dbclient.MPLSL3Record
+		records []types.MPLSL3Record
 		rts     []string
 		// expected defines a number of record left after filtering
 		expected int
 	}{
 		{
 			name: "Match of 1 RT",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					RT: "100:200",
 				},
@@ -147,7 +147,7 @@ func TestFilterByRT(t *testing.T) {
 		},
 		{
 			name: "Match of 2 RT",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					RT: "100:200",
 				},
@@ -163,7 +163,7 @@ func TestFilterByRT(t *testing.T) {
 		},
 		{
 			name: "No Match of 2 RT",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					RT: "100:200",
 				},
@@ -191,14 +191,14 @@ func TestFilterByRT(t *testing.T) {
 func TestFilterByIPFamily(t *testing.T) {
 	tests := []struct {
 		name    string
-		records []dbclient.MPLSL3Record
+		records []types.MPLSL3Record
 		// expected defines a number of record left after filtering
 		ipv4     bool
 		expected int
 	}{
 		{
 			name: "IPv4 only",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					IPv4: true,
 				},
@@ -214,7 +214,7 @@ func TestFilterByIPFamily(t *testing.T) {
 		},
 		{
 			name: "IPv6 only",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					IPv4: false,
 				},
@@ -230,7 +230,7 @@ func TestFilterByIPFamily(t *testing.T) {
 		},
 		{
 			name: "IPv4 only request for IPv6",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					IPv4: true,
 				},
@@ -246,7 +246,7 @@ func TestFilterByIPFamily(t *testing.T) {
 		},
 		{
 			name: "IPv6 only request for IPv4",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					IPv4: true,
 				},
@@ -262,7 +262,7 @@ func TestFilterByIPFamily(t *testing.T) {
 		},
 		{
 			name: "Mix IPv4 and IPv6 request for IPv4",
-			records: []dbclient.MPLSL3Record{
+			records: []types.MPLSL3Record{
 				{
 					IPv4: true,
 				},
