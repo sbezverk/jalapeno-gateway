@@ -58,6 +58,10 @@ func mainLoop(gwclient pbapi.GatewayServiceClient) {
 		// 	prompt:    "Autonomous System Number ",
 		// 	validator: asnValidator,
 		// },
+		// {
+		// 	prompt:    "VRF name ",
+		// 	validator: vrfNameValidator,
+		// },
 		{
 			prompt:    "RD for the application VRF ",
 			validator: rdValidator,
@@ -95,19 +99,24 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 	// Get ASN
 	//	asn, _ := strconv.Atoi(p[2].input)
 	// Get and marshal RD
+
 	rd, _ := marshalRD(p[0].input)
+
 	// Get and marshal a slice of RTs
 	//	rt, _ := marshalRT(p[4].input)
 	// Get VPN label
 	//	vpnLabel, _ := getLabel(p[5].input)
 	// Get Unicast label
 	// ucastLabel, _ := getLabel(p[6].input)
+
 	prefixes, err := getVpnPrefixByRD(ctx, gwclient, rd)
+	//	prefixes, err := getVpnPrefixByName(ctx, gwclient, p[0].input)
 	if err != nil {
 		return fmt.Errorf("failed to get vpn prefixes for RD: %s with error: %+v", p[0].input, err)
 	}
 	fmt.Printf("\nSRv6 L3 Prefixes for RD: %s\n", p[0].input)
 	for _, p := range prefixes {
+		fmt.Printf("Prefix SID: %+v\n", p.PrefixSid)
 		if p.PrefixSid != nil {
 			if psid, err := bgpclient.UnmarshalPrefixSID(p.PrefixSid.Tlvs); err == nil {
 				if psid.SRv6L3Service != nil {
@@ -124,6 +133,16 @@ func processRequest(gwclient pbapi.GatewayServiceClient, p []parameter) error {
 
 func getVpnPrefixByRD(ctx context.Context, gwclient pbapi.GatewayServiceClient, rd *any.Any) ([]*pbapi.SRv6L3Prefix, error) {
 	req := &pbapi.L3VpnRequest{Rd: rd, Ipv4: true}
+	resp, err := gwclient.SRv6L3VPN(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Srv6Prefix, nil
+}
+
+func getVpnPrefixByName(ctx context.Context, gwclient pbapi.GatewayServiceClient, name string) ([]*pbapi.SRv6L3Prefix, error) {
+	req := &pbapi.L3VpnRequest{VpnName: name, Ipv4: true}
 	resp, err := gwclient.SRv6L3VPN(ctx, req)
 	if err != nil {
 		return nil, err
@@ -295,6 +314,14 @@ func asnValidator(p parameter) error {
 func rdValidator(p parameter) error {
 	if err := bgpclient.RDValidator(p.input); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func vrfNameValidator(p parameter) error {
+	if p.input == "" {
+		return fmt.Errorf("vrf name cannot be empty")
 	}
 
 	return nil

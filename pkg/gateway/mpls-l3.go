@@ -54,8 +54,8 @@ func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 		mask = int(req.VpnPrefix.MaskLength)
 		glog.V(5).Infof("L3VPN request for prefix: %s/%d", addr, mask)
 	}
-
-	rq := dbclient.NewL3VpnReq(rd.String(), rts, req.Ipv4, addr, uint32(mask))
+	// TODO Add processing VPN name
+	rq := dbclient.NewL3VpnReq("", rd.String(), rts, req.Ipv4, addr, uint32(mask))
 
 	rs, err := dbi.MPLSL3VpnRequest(context.TODO(), rq)
 	if err != nil {

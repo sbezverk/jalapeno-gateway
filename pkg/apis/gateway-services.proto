@@ -25,6 +25,8 @@ message L3VpnRequest {
   repeated google.protobuf.Any rt = 4;
   // Prefix is optional filtering parameter.
   apis.Prefix vpn_prefix = 5;
+  // VPN name identifies request vrf name 
+  string vpn_name = 6;
 }
 
 message Client {

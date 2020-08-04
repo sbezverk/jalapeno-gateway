@@ -1,7 +1,7 @@
 REGISTRY_NAME?=docker.io/sbezverk
 IMAGE_VERSION?=0.0.0
 
-.PHONY: all jalapeno-gateway jalapeno-client compile-gateway compile-client container-gateway container-client push clean test
+.PHONY: all jalapeno-gateway jalapeno-client compile-gateway compile-client container-gateway push clean test
 
 ifdef V
 TESTARGS = -v -args -alsologtostderr -v 5
@@ -25,12 +25,8 @@ jalapeno-client:
 container-gateway: jalapeno-gateway
 	docker build -t $(REGISTRY_NAME)/jalapeno-gateway-debug:$(IMAGE_VERSION) -f ./build/Dockerfile.gateway .
 
-container-client: jalapeno-client
-	docker build -t $(REGISTRY_NAME)/jalapeno-client:$(IMAGE_VERSION) -f ./build/Dockerfile.client .
-
 push: container-gateway container-client
 	docker push $(REGISTRY_NAME)/jalapeno-gateway-debug:$(IMAGE_VERSION)
-	docker push $(REGISTRY_NAME)/jalapeno-client:$(IMAGE_VERSION)
 
 clean:
 	rm -rf bin
