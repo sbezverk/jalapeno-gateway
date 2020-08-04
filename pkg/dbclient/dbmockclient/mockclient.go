@@ -98,17 +98,24 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *dbclient.L3VpnReq) 
 		}
 		p.Asn = uint32(asn)
 		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
-		rd, err := bgpclient.MarshalRDFromString(r.VPNRD)
+		rd, err := bgpclient.MarshalRDFromString(r.RD)
 		if err != nil {
 			continue
 		}
 		p.Rd = rd
 		rts := make([]*any.Any, 0)
-		for _, extcomm := range strings.Split(r.BaseAttributes.ExtCommunityList, ",") {
-			if !strings.HasPrefix(extcomm, "rt=") {
-				continue
-			}
-			rt, err := bgpclient.MarshalRTFromString(strings.Split(extcomm, "=")[1])
+		// for _, extcomm := range strings.Split(r.BaseAttributes.ExtCommunityList, ",") {
+		// 	if !strings.HasPrefix(extcomm, "rt=") {
+		// 		continue
+		// 	}
+		// 	rt, err := bgpclient.MarshalRTFromString(strings.Split(extcomm, "=")[1])
+		// 	if err != nil {
+		// 		continue
+		// 	}
+		// 	rts = append(rts, rt)
+		// }
+		for _, s := range r.RT {
+			rt, err := bgpclient.MarshalRTFromString(s)
 			if err != nil {
 				continue
 			}
@@ -229,10 +236,10 @@ func NewMockDBClient(mpls bool, fn ...string) dbclient.DBClient {
 		}
 	} else {
 		for _, r := range srv6 {
-			if _, ok := ds.srv6Store[r.VPNRD]; !ok {
-				ds.srv6Store[r.VPNRD] = make([]dbclient.SRv6L3Record, 0)
+			if _, ok := ds.srv6Store[r.RD]; !ok {
+				ds.srv6Store[r.RD] = make([]dbclient.SRv6L3Record, 0)
 			}
-			ds.srv6Store[r.VPNRD] = append(ds.srv6Store[r.VPNRD], r)
+			ds.srv6Store[r.RD] = append(ds.srv6Store[r.RD], r)
 		}
 	}
 
