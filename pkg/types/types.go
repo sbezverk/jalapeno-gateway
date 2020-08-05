@@ -97,42 +97,6 @@ type Hit struct {
 	Version *int64          `json:"_version"`
 }
 
-// PullerMessage defines a structure of information sent over the communication channel between a puller process and the processor.
-type PullerMessage struct {
-	Entries []*VRF
-}
-
-// Command defines a custom type for PusherMessage
-type Command int
-
-func (c Command) String() string {
-	switch c {
-	case Add:
-		return "Add"
-	case Update:
-		return "Update"
-	case Delete:
-		return "Delete"
-	}
-	return "Unknown"
-}
-
-const (
-	// Add defines add command in PusherMessage
-	Add Command = iota
-	// Update defines update command in PusherMessage
-	Update
-	// Delete defines delete command in PusherMessage
-	Delete
-)
-
-// PusherMessage defines a structure of information sent over the communication channel between the processor and the pusher.
-// Command carries either Add or Delete vrf entry from the pusher's backend.
-type PusherMessage struct {
-	Command Command
-	Entry   *VRF
-}
-
 // MPLSL3Record represents the database record structure
 type MPLSL3Record struct {
 	Key             string `json:"_key,omitempty"`
