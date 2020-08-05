@@ -309,38 +309,3 @@ func prefixToBytes(p string) ([]byte, error) {
 	}
 	return []byte(b.To16()), nil
 }
-
-// MakeMessage build a message for sending over a channel between a puller process and the processor
-func MakeMessage(b []byte) (*PullerMessage, error) {
-	objmap := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(b, &objmap); err != nil {
-		return nil, fmt.Errorf("failed to decode response body into object with error: %+v", err)
-	}
-	hit := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(objmap["hits"], &hit); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal hit with error: %+v", err)
-	}
-	hits := make([]json.RawMessage, 0)
-	if err := json.Unmarshal(hit["hits"], &hits); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal hits with error: %+v", err)
-	}
-	msg := PullerMessage{
-		Entries: make([]*VRF, len(hits)),
-	}
-	for i, h := range hits {
-		hit := Hit{}
-		if err := json.Unmarshal(h, &hit); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal hit with error: %+v", err)
-		}
-		vrf := &VRF{}
-		if err := json.Unmarshal(hit.Source, &vrf); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal hits with error: %+v", err)
-		}
-		if hit.Version != nil {
-			vrf.Version = hit.Version
-		}
-		msg.Entries[i] = vrf
-	}
-
-	return &msg, nil
-}
