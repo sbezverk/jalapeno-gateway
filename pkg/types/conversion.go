@@ -121,10 +121,15 @@ func (cp *ConfigParameters) UnmarshalJSON(b []byte) error {
 			return err
 		}
 	}
-	cp.AddressFamilies = make([]*AddressFamily, 0)
+	cp.AddressFamilies = make(map[string]*AddressFamily, 0)
 	if af, ok := objmap["address_families"]; ok {
-		if err := json.Unmarshal(af, &cp.AddressFamilies); err != nil {
+		// Loop through the list of address families and construct a map
+		afs := make([]*AddressFamily, 0)
+		if err := json.Unmarshal(af, &afs); err != nil {
 			return err
+		}
+		for _, af := range afs {
+			cp.AddressFamilies[af.AFName+af.SAFIName] = af
 		}
 	}
 
