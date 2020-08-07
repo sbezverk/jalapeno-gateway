@@ -25,7 +25,7 @@ jalapeno-client:
 container-gateway: jalapeno-gateway
 	docker build -t $(REGISTRY_NAME)/jalapeno-gateway-debug:$(IMAGE_VERSION) -f ./build/Dockerfile.gateway .
 
-push: container-gateway container-client
+push: container-gateway
 	docker push $(REGISTRY_NAME)/jalapeno-gateway-debug:$(IMAGE_VERSION)
 
 clean:

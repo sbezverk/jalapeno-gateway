@@ -73,8 +73,8 @@ type BGP struct {
 
 // ConfigParameters defines structure of vrf's configuration parameters
 type ConfigParameters struct {
-	BGP             *BGP             `json:"bgp"`
-	AddressFamilies []*AddressFamily `json:"address_families"`
+	BGP             *BGP                      `json:"bgp"`
+	AddressFamilies map[string]*AddressFamily `json:"address_families"`
 }
 
 // VRF defines structure of vrf table
