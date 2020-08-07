@@ -71,6 +71,11 @@ type BGP struct {
 	RDAuto               bool `json:"rd_auto"`
 }
 
+const (
+	// IPv4Unicast defines a type of address family for IPv4 Unicast
+	IPv4Unicast = "ipv4unicast"
+)
+
 // ConfigParameters defines structure of vrf's configuration parameters
 type ConfigParameters struct {
 	BGP             *BGP                      `json:"bgp"`

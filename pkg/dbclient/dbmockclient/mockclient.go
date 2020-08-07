@@ -43,8 +43,11 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 			// VRF name not found in the store, fail the request
 			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
 		}
-		// TODO refactor this monstrosity into a safe statement with checks
-		vrfrts = append(vrfrts, v.ConfigParameters.AddressFamilies[0].RouteTargets["core"]["import"]["native"]...)
+		ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+		if !ok {
+			return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
+		}
+		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
 		records = m.mplsStore
 	case req.RD != "":
 		for _, r := range m.mplsStore {
@@ -112,8 +115,11 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 			// VRF name not found in the store, fail the request
 			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
 		}
-		// TODO refactor this monstrosity into a safe statement with checks
-		vrfrts = append(vrfrts, v.ConfigParameters.AddressFamilies[0].RouteTargets["core"]["import"]["native"]...)
+		ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+		if !ok {
+			return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
+		}
+		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
 		records = m.srv6Store
 	case req.RD != "":
 		for _, r := range m.srv6Store {

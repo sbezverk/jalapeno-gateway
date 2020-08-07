@@ -16,17 +16,13 @@ package apis;
 message L3VpnRequest {
   // id is a unique identificator of a gateway client.
   bytes id = 1;
-  // RD identifies the vpn route distinguisher, it is a mandatory parameter
-  google.protobuf.Any rd = 2;
+  // VPN name identifies requested vrf name
+  string vpn_name = 2;
   // Identifies if request sent for ipv4 prefixes in this case this field should
   // be set to true or ipv6, in this case this field should be set to false.
   bool ipv4 = 3;
-  // Route Targets is optional filtering parameter.
-  repeated google.protobuf.Any rt = 4;
-  // Prefix is optional filtering parameter.
-  apis.Prefix vpn_prefix = 5;
-  // VPN name identifies request vrf name 
-  string vpn_name = 6;
+  // rt identifies requested vrf route target
+  google.protobuf.Any rt = 4;
 }
 
 message Client {
