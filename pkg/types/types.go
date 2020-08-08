@@ -142,20 +142,9 @@ type SRv6L3Record struct {
 
 // L3VpnReq defines data struct for L3 VPN database request
 type L3VpnReq struct {
-	Name       string
-	RD         string
-	IPv4       bool
-	RT         []string
-	Prefix     string
-	MaskLength uint32
-}
-
-// MPLSL3VpnPrefix defines L3 VPN prefix Database object
-type MPLSL3VpnPrefix struct {
-	Prefix     string
-	MaskLength uint32
-	VpnLabel   uint32
-	RT         []string
+	Name string
+	IPv4 bool
+	RT   []string
 }
 
 // MPLSL3VpnResp defines data struct for L3 VPN database response

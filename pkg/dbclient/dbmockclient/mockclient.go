@@ -49,16 +49,6 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 		}
 		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
 		records = m.mplsStore
-	case req.RD != "":
-		for _, r := range m.mplsStore {
-			if strings.Compare(r.RD, req.RD) == 0 {
-				records = append(records, r)
-			}
-		}
-		if len(records) == 0 {
-			// RD not found in the store, fail the request
-			return nil, fmt.Errorf("Route Distinguisher %s does not exist", req.RD)
-		}
 	case len(req.RT) != 0:
 	default:
 		return nil, fmt.Errorf("either a vrf name or a route distinguisher  must be specified in the request")
@@ -67,10 +57,6 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	// Filter by IP Family
 	records = filterByIPFamily(req.IPv4, records)
 
-	// Filter by Prefix
-	if req.Prefix != "" {
-		records = filterByPrefix(req.Prefix, req.MaskLength, records)
-	}
 	// Filter by RT
 	if len(req.RT)+len(vrfrts) != 0 {
 		records = filterByRT(append(req.RT, vrfrts...), records)
@@ -100,7 +86,7 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 }
 
 func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
-	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for VRF Name: %s RD: %s RTs: %+v", req.Name, req.RD, req.RT)
+	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for VRF Name: %s RTs: %+v", req.Name, req.RT)
 	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
 	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
@@ -121,16 +107,6 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 		}
 		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
 		records = m.srv6Store
-	case req.RD != "":
-		for _, r := range m.srv6Store {
-			if strings.Compare(r.RD, req.RD) == 0 {
-				records = append(records, r)
-			}
-		}
-		if len(records) == 0 {
-			// RD not found in the store, fail the request
-			return nil, fmt.Errorf("Route Distinguisher %s does not exist", req.RD)
-		}
 	case len(req.RT) != 0:
 	default:
 		return nil, fmt.Errorf("either a vrf name or a route distinguisher or a route target must be specified in the request")

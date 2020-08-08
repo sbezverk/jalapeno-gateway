@@ -3,11 +3,9 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -29,22 +27,14 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 
 	// RD, VPN Name or RTs can be used as primary selection criteria, one of them must be
 	// present in the request.
-	if req.Rd == nil && req.VpnName == "" && len(req.Rt) == 0 {
-		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, at leat one of RD or VPN name or RTs defined")
+	if req.VpnName == "" && len(req.Rt) == 0 {
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, either VPN name or RTs must be specified in the request")
 	}
 	// Check each attribute and prepare it for NewL3VpnReq call
-	var rd bgp.RouteDistinguisherInterface
 	var err error
 	m := "SRv6 L3 request for "
 	if req.VpnName != "" {
 		m += "VPN Name: " + req.VpnName
-	}
-	if req.Rd != nil {
-		rd, err = bgpclient.UnmarshalRD(req.Rd)
-		if err != nil {
-			return &pbapi.SRv6L3Response{}, err
-		}
-		m += "RD: " + rd.String()
 	}
 	var rts []string
 	if len(req.Rt) != 0 {
@@ -58,21 +48,8 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 			m += r.String() + " "
 		}
 	}
-	// Check for an optional prefix
-	var addr string
-	var mask int
-	if req.VpnPrefix != nil {
-		addr = net.IP(req.VpnPrefix.Address).String()
-		mask = int(req.VpnPrefix.MaskLength)
-		m += fmt.Sprintf("VPN Prefix: %s/%d", addr, mask)
-	}
 	glog.V(5).Infof("%s", m)
-	// Check if RD is not nil before getting its string representation
-	rds := ""
-	if rd != nil {
-		rds = rd.String()
-	}
-	rq := dbclient.NewL3VpnReq(req.VpnName, rds, rts, req.Ipv4, addr, uint32(mask))
+	rq := dbclient.NewL3VpnReq(req.VpnName, rts, req.Ipv4)
 
 	rs, err := dbi.SRv6L3VpnRequest(context.TODO(), rq)
 	if err != nil {
