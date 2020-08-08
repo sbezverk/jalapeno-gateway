@@ -138,11 +138,6 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 		}
 		p.Asn = uint32(asn)
 		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
-		rd, err := bgpclient.MarshalRDFromString(r.RD)
-		if err != nil {
-			continue
-		}
-		p.Rd = rd
 		rts := make([]*any.Any, 0)
 		for _, s := range r.RT {
 			rt, err := bgpclient.MarshalRTFromString(s)
