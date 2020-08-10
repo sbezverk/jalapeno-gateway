@@ -3,9 +3,10 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -25,37 +26,17 @@ func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	if !ok {
 		return nil, fmt.Errorf("request failed, BGP service is not available")
 	}
-	// Check if RD is present in the request, if not return error as RD is a mandatory parameter
-	if req.Rd == nil {
-		return nil, fmt.Errorf("request failed, RD is nil")
-	}
-	rd, err := bgpclient.UnmarshalRD(req.Rd)
-	if err != nil {
-		return &pbapi.MPLSL3Response{}, err
-	}
-	glog.V(5).Infof("L3VPN request for RD: %s", rd.String())
-
 	// Check for optional RTs
-	var rts []string
+
+	var rt []bgp.ExtendedCommunityInterface
+	var err error
 	if req.Rt != nil {
-		rt, err := bgpclient.UnmarshalRT(req.Rt)
+		rt, err = bgpclient.UnmarshalRT([]*any.Any{req.Rt})
 		if err != nil {
 			return &pbapi.MPLSL3Response{}, err
 		}
-		for _, r := range rt {
-			rts = append(rts, r.String())
-		}
 	}
-	// Check for an optional prefix
-	var addr string
-	var mask int
-	if req.VpnPrefix != nil {
-		addr = net.IP(req.VpnPrefix.Address).String()
-		mask = int(req.VpnPrefix.MaskLength)
-		glog.V(5).Infof("L3VPN request for prefix: %s/%d", addr, mask)
-	}
-	// TODO Add processing VPN name
-	rq := dbclient.NewL3VpnReq("", rd.String(), rts, req.Ipv4, addr, uint32(mask))
+	rq := dbclient.NewL3VpnReq("", rt[0].String(), req.Ipv4)
 
 	rs, err := dbi.MPLSL3VpnRequest(context.TODO(), rq)
 	if err != nil {

@@ -71,6 +71,20 @@ type BGP struct {
 	RDAuto               bool `json:"rd_auto"`
 }
 
+const (
+	// IPv4Unicast defines a type of address family for IPv4 Unicast
+	IPv4Unicast = "ipv4unicast"
+)
+
+const (
+	RouteTargetLocationCore = "core"
+	RouteTargetLocationDC   = "dc"
+	RouteTargetActionImport = "import"
+	RouteTargetActionExport = "export"
+	RouteTargetTypeNative   = "native"
+	RouteTargetTypeLeaked   = "leaked"
+)
+
 // ConfigParameters defines structure of vrf's configuration parameters
 type ConfigParameters struct {
 	BGP             *BGP                      `json:"bgp"`
@@ -137,20 +151,9 @@ type SRv6L3Record struct {
 
 // L3VpnReq defines data struct for L3 VPN database request
 type L3VpnReq struct {
-	Name       string
-	RD         string
-	IPv4       bool
-	RT         []string
-	Prefix     string
-	MaskLength uint32
-}
-
-// MPLSL3VpnPrefix defines L3 VPN prefix Database object
-type MPLSL3VpnPrefix struct {
-	Prefix     string
-	MaskLength uint32
-	VpnLabel   uint32
-	RT         []string
+	Name string
+	IPv4 bool
+	RT   string
 }
 
 // MPLSL3VpnResp defines data struct for L3 VPN database response

@@ -3,9 +3,9 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
@@ -24,55 +24,30 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	// Check if Database interface is available, if not then there is no reason to do any processing
 	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
 	if !ok {
-		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, BGP service is not available")
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, Database service is not available")
 	}
 
 	// RD, VPN Name or RTs can be used as primary selection criteria, one of them must be
 	// present in the request.
-	if req.Rd == nil && req.VpnName == "" && len(req.Rt) == 0 {
-		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, at leat one of RD or VPN name or RTs defined")
+	if req.VpnName == "" && req.Rt == nil {
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, either VPN name or RTs must be specified in the request")
 	}
 	// Check each attribute and prepare it for NewL3VpnReq call
-	var rd bgp.RouteDistinguisherInterface
 	var err error
 	m := "SRv6 L3 request for "
 	if req.VpnName != "" {
 		m += "VPN Name: " + req.VpnName
 	}
-	if req.Rd != nil {
-		rd, err = bgpclient.UnmarshalRD(req.Rd)
-		if err != nil {
-			return &pbapi.SRv6L3Response{}, err
-		}
-		m += "RD: " + rd.String()
-	}
-	var rts []string
-	if len(req.Rt) != 0 {
-		rt, err := bgpclient.UnmarshalRT(req.Rt)
+	var rt []bgp.ExtendedCommunityInterface
+	if req.Rt != nil {
+		rt, err = bgpclient.UnmarshalRT([]*any.Any{req.Rt})
 		if err != nil {
 			return &pbapi.SRv6L3Response{}, err
 		}
 		m += "RTs: "
-		for _, r := range rt {
-			rts = append(rts, r.String())
-			m += r.String() + " "
-		}
-	}
-	// Check for an optional prefix
-	var addr string
-	var mask int
-	if req.VpnPrefix != nil {
-		addr = net.IP(req.VpnPrefix.Address).String()
-		mask = int(req.VpnPrefix.MaskLength)
-		m += fmt.Sprintf("VPN Prefix: %s/%d", addr, mask)
 	}
 	glog.V(5).Infof("%s", m)
-	// Check if RD is not nil before getting its string representation
-	rds := ""
-	if rd != nil {
-		rds = rd.String()
-	}
-	rq := dbclient.NewL3VpnReq(req.VpnName, rds, rts, req.Ipv4, addr, uint32(mask))
+	rq := dbclient.NewL3VpnReq(req.VpnName, rt[0].String(), req.Ipv4)
 
 	rs, err := dbi.SRv6L3VpnRequest(context.TODO(), rq)
 	if err != nil {
@@ -129,4 +104,34 @@ func (g *gateway) DelSRv6L3Route(ctx context.Context, req *pbapi.SRv6L3Route) (*
 	}
 
 	return &empty.Empty{}, bgpi.DelSRv6L3Route(ctx, req.Path)
+}
+
+func (g *gateway) VpnRT(ctx context.Context, req *pbapi.VpnRTRequest) (*pbapi.VpnRTResponse, error) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		client := md.Get("CLIENT_IP")
+		if len(client) != 0 {
+			glog.Infof("VPN RT request from client: %+v for VPN: %s", client, req.VpnName)
+		}
+	}
+	// Check if Database interface is available, if not then there is no reason to do any processing
+	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
+	if !ok {
+		return &pbapi.VpnRTResponse{}, fmt.Errorf("request failed, Database service is not available")
+	}
+
+	// VPN Name must be present in the request to find out its route target
+	if req.VpnName == "" {
+		return &pbapi.VpnRTResponse{}, fmt.Errorf("request failed, either VPN name must be specified in the request")
+	}
+	rt, err := dbi.VPNRTRequest(ctx, req.VpnName)
+	if err != nil {
+		return &pbapi.VpnRTResponse{}, err
+	}
+	rtM, err := bgpclient.MarshalRTFromString(rt)
+	if err != nil {
+		return &pbapi.VpnRTResponse{}, err
+	}
+	return &pbapi.VpnRTResponse{
+		Rt: rtM,
+	}, nil
 }
