@@ -39,7 +39,7 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	records := make([]types.MPLSL3Record, 0)
 
 	// Filter by IP Family
-	records = filterByIPFamily(req.IPv4, records)
+	records = filterByIPFamily(req.IPv4, m.mplsStore)
 
 	// Filter by RT
 	records = filterByRT([]string{req.RT}, records)
@@ -77,7 +77,7 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 		Prefix: srv6Prefix,
 	}
 	records := make([]types.SRv6L3Record, 0)
-	records = filterByRTSRv6L3Record([]string{req.RT}, records)
+	records = filterByRTSRv6L3Record([]string{req.RT}, m.srv6Store)
 
 	if len(records) == 0 {
 		// All filtered, returning error

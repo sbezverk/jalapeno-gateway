@@ -110,7 +110,7 @@ func (g *gateway) VpnRT(ctx context.Context, req *pbapi.VpnRTRequest) (*pbapi.Vp
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		client := md.Get("CLIENT_IP")
 		if len(client) != 0 {
-			glog.Infof("VPN RT request from client: %+v", client)
+			glog.Infof("VPN RT request from client: %+v for VPN: %s", client, req.VpnName)
 		}
 	}
 	// Check if Database interface is available, if not then there is no reason to do any processing
