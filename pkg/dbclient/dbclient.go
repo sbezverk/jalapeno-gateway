@@ -19,6 +19,7 @@ type DBClient interface {
 type DBServices interface {
 	MPLSL3VpnRequest(context.Context, *types.L3VpnReq) (*types.MPLSL3VpnResp, error)
 	SRv6L3VpnRequest(context.Context, *types.L3VpnReq) (*types.SRv6L3VpnResp, error)
+	VPNRTRequest(context.Context, string) (string, error)
 }
 
 // NewL3VpnReq instantiates a L3 VPN Databse Request object

@@ -76,6 +76,15 @@ const (
 	IPv4Unicast = "ipv4unicast"
 )
 
+const (
+	RouteTargetLocationCore = "core"
+	RouteTargetLocationDC   = "dc"
+	RouteTargetActionImport = "import"
+	RouteTargetActionExport = "export"
+	RouteTargetTypeNative   = "native"
+	RouteTargetTypeLeaked   = "leaked"
+)
+
 // ConfigParameters defines structure of vrf's configuration parameters
 type ConfigParameters struct {
 	BGP             *BGP                      `json:"bgp"`

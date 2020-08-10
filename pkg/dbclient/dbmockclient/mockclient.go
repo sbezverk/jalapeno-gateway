@@ -32,37 +32,17 @@ type mockSrv struct {
 }
 
 func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.MPLSL3VpnResp, error) {
+	if req.RT == "" {
+		return nil, fmt.Errorf("route target must be specified in the request")
+	}
 	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
 	records := make([]types.MPLSL3Record, 0)
-
-	//	vrfrts := make([]string, 0)
-
-	// Check for presence of primary selection criterias
-	switch {
-	case req.Name != "":
-		_, ok := m.vrfStore[req.Name]
-		if !ok {
-			// VRF name not found in the store, fail the request
-			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
-		}
-	// 	ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-	// 	if !ok {
-	// 		return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
-	// 	}
-	// 	vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
-	// 	records = m.mplsStore
-	// case len(req.RT) != 0:
-	default:
-		return nil, fmt.Errorf("either a vrf name or a route distinguisher  must be specified in the request")
-	}
 
 	// Filter by IP Family
 	records = filterByIPFamily(req.IPv4, records)
 
 	// Filter by RT
-	// if len(req.RT)+len(vrfrts) != 0 {
-	// 	records = filterByRT(append(req.RT, vrfrts...), records)
-	// }
+	records = filterByRT([]string{req.RT}, records)
 
 	if len(records) == 0 {
 		// All filtered, returning error
@@ -88,36 +68,16 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 }
 
 func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
-	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for VRF Name: %s RTs: %+v", req.Name, req.RT)
+	if req.RT == "" {
+		return nil, fmt.Errorf("route target must be specified in the request")
+	}
+	glog.V(5).Infof("Mock DB SRv6 VPN Service was called for VRF RT: %s", req.RT)
 	srv6Prefix := make([]*pbapi.SRv6L3Prefix, 0)
 	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
 	}
 	records := make([]types.SRv6L3Record, 0)
-	//	var vrfRT string
-	// Check for presence of primary selection criterias
-	switch {
-	case req.Name != "":
-		_, ok := m.vrfStore[req.Name]
-		if !ok {
-			// VRF name not found in the store, fail the request
-			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
-		}
-		// ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-		// if !ok {
-		// 	return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
-		// }
-		// vrfRT = ipv4unicast.RouteTargets["core"]["import"]["native"][0]
-		// records = m.srv6Store
-	case len(req.RT) != 0:
-	default:
-		return nil, fmt.Errorf("either a vrf name or a route distinguisher or a route target must be specified in the request")
-	}
-
-	// Filter by RT
-	// if len(req.RT)+len(vrfrts) != 0 {
-	// 	records = filterByRTSRv6L3Record(append(req.RT, vrfrts...), records)
-	// }
+	records = filterByRTSRv6L3Record([]string{req.RT}, records)
 
 	if len(records) == 0 {
 		// All filtered, returning error
@@ -154,6 +114,30 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	resp.Prefix = srv6Prefix
 
 	return &resp, nil
+}
+
+func (m *mockSrv) VPNRTRequest(ctx context.Context, name string) (string, error) {
+	vpn, ok := m.vrfStore[name]
+	if !ok {
+		return "", fmt.Errorf("vpn %s does not exist", name)
+	}
+	if vpn.ConfigParameters == nil {
+		return "", fmt.Errorf("vpn %s does not have cpnfiguration parameters", name)
+	}
+	af, ok := vpn.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+	if !ok {
+		return "", fmt.Errorf("vpn %s does not have IPv4 Unicast address family", name)
+	}
+	if af == nil {
+		return "", fmt.Errorf("vpn %s address family IPv4 Unicast is nil", name)
+	}
+	rt := af.RouteTargets[types.RouteTargetLocationCore][types.RouteTargetActionImport][types.RouteTargetTypeNative]
+	if len(rt) == 0 {
+		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
+	}
+
+	// Returning first route target found on the list of RTs
+	return rt[0], nil
 }
 
 func (m *mockSrv) Connector(addr string) error {

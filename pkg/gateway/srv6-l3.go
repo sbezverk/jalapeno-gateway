@@ -24,7 +24,7 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	// Check if Database interface is available, if not then there is no reason to do any processing
 	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
 	if !ok {
-		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, BGP service is not available")
+		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, Database service is not available")
 	}
 
 	// RD, VPN Name or RTs can be used as primary selection criteria, one of them must be
@@ -104,4 +104,34 @@ func (g *gateway) DelSRv6L3Route(ctx context.Context, req *pbapi.SRv6L3Route) (*
 	}
 
 	return &empty.Empty{}, bgpi.DelSRv6L3Route(ctx, req.Path)
+}
+
+func (g *gateway) VpnRT(ctx context.Context, req *pbapi.VpnRTRequest) (*pbapi.VpnRTResponse, error) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		client := md.Get("CLIENT_IP")
+		if len(client) != 0 {
+			glog.Infof("VPN RT request from client: %+v", client)
+		}
+	}
+	// Check if Database interface is available, if not then there is no reason to do any processing
+	dbi, ok := g.dbc.GetClientInterface().(dbclient.DBServices)
+	if !ok {
+		return &pbapi.VpnRTResponse{}, fmt.Errorf("request failed, Database service is not available")
+	}
+
+	// VPN Name must be present in the request to find out its route target
+	if req.VpnName == "" {
+		return &pbapi.VpnRTResponse{}, fmt.Errorf("request failed, either VPN name must be specified in the request")
+	}
+	rt, err := dbi.VPNRTRequest(ctx, req.VpnName)
+	if err != nil {
+		return &pbapi.VpnRTResponse{}, err
+	}
+	rtM, err := bgpclient.MarshalRTFromString(rt)
+	if err != nil {
+		return &pbapi.VpnRTResponse{}, err
+	}
+	return &pbapi.VpnRTResponse{
+		Rt: rtM,
+	}, nil
 }
