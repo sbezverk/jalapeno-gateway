@@ -21,7 +21,7 @@ message L3VpnRequest {
   // be set to true or ipv6, in this case this field should be set to false.
   bool ipv4 = 3;
   // rt identifies requested vrf route target
-  repeated google.protobuf.Any rt = 4;
+  google.protobuf.Any rt = 4;
 }
 
 message Client {

@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -27,7 +29,7 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 
 	// RD, VPN Name or RTs can be used as primary selection criteria, one of them must be
 	// present in the request.
-	if req.VpnName == "" && len(req.Rt) == 0 {
+	if req.VpnName == "" && req.Rt == nil {
 		return &pbapi.SRv6L3Response{}, fmt.Errorf("request failed, either VPN name or RTs must be specified in the request")
 	}
 	// Check each attribute and prepare it for NewL3VpnReq call
@@ -36,20 +38,16 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	if req.VpnName != "" {
 		m += "VPN Name: " + req.VpnName
 	}
-	var rts []string
-	if len(req.Rt) != 0 {
-		rt, err := bgpclient.UnmarshalRT(req.Rt)
+	var rt []bgp.ExtendedCommunityInterface
+	if req.Rt != nil {
+		rt, err = bgpclient.UnmarshalRT([]*any.Any{req.Rt})
 		if err != nil {
 			return &pbapi.SRv6L3Response{}, err
 		}
 		m += "RTs: "
-		for _, r := range rt {
-			rts = append(rts, r.String())
-			m += r.String() + " "
-		}
 	}
 	glog.V(5).Infof("%s", m)
-	rq := dbclient.NewL3VpnReq(req.VpnName, rts, req.Ipv4)
+	rq := dbclient.NewL3VpnReq(req.VpnName, rt[0].String(), req.Ipv4)
 
 	rs, err := dbi.SRv6L3VpnRequest(context.TODO(), rq)
 	if err != nil {

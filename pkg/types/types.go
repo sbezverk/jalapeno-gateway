@@ -144,7 +144,7 @@ type SRv6L3Record struct {
 type L3VpnReq struct {
 	Name string
 	IPv4 bool
-	RT   []string
+	RT   string
 }
 
 // MPLSL3VpnResp defines data struct for L3 VPN database response

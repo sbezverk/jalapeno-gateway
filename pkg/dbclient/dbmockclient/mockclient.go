@@ -34,22 +34,24 @@ type mockSrv struct {
 func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.MPLSL3VpnResp, error) {
 	glog.V(5).Infof("Mock DB L3 VPN Service was called with the request: %+v", req)
 	records := make([]types.MPLSL3Record, 0)
-	vrfrts := make([]string, 0)
+
+	//	vrfrts := make([]string, 0)
+
 	// Check for presence of primary selection criterias
 	switch {
 	case req.Name != "":
-		v, ok := m.vrfStore[req.Name]
+		_, ok := m.vrfStore[req.Name]
 		if !ok {
 			// VRF name not found in the store, fail the request
 			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
 		}
-		ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-		if !ok {
-			return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
-		}
-		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
-		records = m.mplsStore
-	case len(req.RT) != 0:
+	// 	ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
+	// 	}
+	// 	vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
+	// 	records = m.mplsStore
+	// case len(req.RT) != 0:
 	default:
 		return nil, fmt.Errorf("either a vrf name or a route distinguisher  must be specified in the request")
 	}
@@ -58,9 +60,9 @@ func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	records = filterByIPFamily(req.IPv4, records)
 
 	// Filter by RT
-	if len(req.RT)+len(vrfrts) != 0 {
-		records = filterByRT(append(req.RT, vrfrts...), records)
-	}
+	// if len(req.RT)+len(vrfrts) != 0 {
+	// 	records = filterByRT(append(req.RT, vrfrts...), records)
+	// }
 
 	if len(records) == 0 {
 		// All filtered, returning error
@@ -92,30 +94,30 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 		Prefix: srv6Prefix,
 	}
 	records := make([]types.SRv6L3Record, 0)
-	vrfrts := make([]string, 0)
+	//	var vrfRT string
 	// Check for presence of primary selection criterias
 	switch {
 	case req.Name != "":
-		v, ok := m.vrfStore[req.Name]
+		_, ok := m.vrfStore[req.Name]
 		if !ok {
 			// VRF name not found in the store, fail the request
 			return nil, fmt.Errorf("vrf name %s does not exist", req.Name)
 		}
-		ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-		if !ok {
-			return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
-		}
-		vrfrts = append(vrfrts, ipv4unicast.RouteTargets["core"]["import"]["native"]...)
-		records = m.srv6Store
+		// ipv4unicast, ok := v.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+		// if !ok {
+		// 	return nil, fmt.Errorf("vpn %s is missing IPv4 Unicast address family", req.Name)
+		// }
+		// vrfRT = ipv4unicast.RouteTargets["core"]["import"]["native"][0]
+		// records = m.srv6Store
 	case len(req.RT) != 0:
 	default:
 		return nil, fmt.Errorf("either a vrf name or a route distinguisher or a route target must be specified in the request")
 	}
 
 	// Filter by RT
-	if len(req.RT)+len(vrfrts) != 0 {
-		records = filterByRTSRv6L3Record(append(req.RT, vrfrts...), records)
-	}
+	// if len(req.RT)+len(vrfrts) != 0 {
+	// 	records = filterByRTSRv6L3Record(append(req.RT, vrfrts...), records)
+	// }
 
 	if len(records) == 0 {
 		// All filtered, returning error

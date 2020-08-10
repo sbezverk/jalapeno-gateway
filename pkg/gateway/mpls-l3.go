@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/osrg/gobgp/pkg/packet/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
@@ -25,17 +27,16 @@ func (g *gateway) MPLSL3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 		return nil, fmt.Errorf("request failed, BGP service is not available")
 	}
 	// Check for optional RTs
-	var rts []string
+
+	var rt []bgp.ExtendedCommunityInterface
+	var err error
 	if req.Rt != nil {
-		rt, err := bgpclient.UnmarshalRT(req.Rt)
+		rt, err = bgpclient.UnmarshalRT([]*any.Any{req.Rt})
 		if err != nil {
 			return &pbapi.MPLSL3Response{}, err
 		}
-		for _, r := range rt {
-			rts = append(rts, r.String())
-		}
 	}
-	rq := dbclient.NewL3VpnReq("", rts, req.Ipv4)
+	rq := dbclient.NewL3VpnReq("", rt[0].String(), req.Ipv4)
 
 	rs, err := dbi.MPLSL3VpnRequest(context.TODO(), rq)
 	if err != nil {
