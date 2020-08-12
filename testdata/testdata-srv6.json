@@ -1,177 +1,16 @@
 [
     {
-      "SrcIP": "192:168:5::3",
-      "DstIP": "13.13.13.0",
-      "VPN_Prefix": "13.13.13.0",
-      "VPN_Prefix_Len": 30,
+      "_key": "5070:65033_13.13.13.0_30",
+      "_id": "L3VPNPrefix/5070:65033_13.13.13.0_30",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65033",
+      "Prefix": "13.13.13.0",
+      "Length": 30,
       "RouterID": "192:168:5::3",
-      "PrefixSID": null,
-      "Origin_AS": "65003",
+      "ASN": 65003,
       "VPN_Label": [
         17152
       ],
-      "RD": "5070:65033",
-      "RT": [
-        "5:65003",
-        "5:65030"
-      ],
-      "IPv4": true,
-      "SRv6_SID": {
-        "sub_tlvs": {
-          "1": [
-            {
-              "sid": "2001:0:5:3::",
-              "endpoint_behavior": 19,
-              "sub_sub_tlvs": {
-                "1": [
-                  {
-                    "local_block_length": 40,
-                    "local_node_length": 24,
-                    "function_length": 16,
-                    "transposition_length": 16,
-                    "transposition_offset": 64
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "SrcIP": "192:168:5::3",
-      "DstIP": "192.168.5.1",
-      "VPN_Prefix": "192.168.5.1",
-      "VPN_Prefix_Len": 32,
-      "RouterID": "192:168:5::3",
-      "PrefixSID": null,
-      "Origin_AS": "65003",
-      "VPN_Label": [
-        17152
-      ],
-      "RD": "5070:65033",
-      "RT": [
-        "5:65003",
-        "5:65030"
-      ],
-      "IPv4": true,
-      "SRv6_SID": {
-        "sub_tlvs": {
-          "1": [
-            {
-              "sid": "2001:0:5:3::",
-              "endpoint_behavior": 19,
-              "sub_sub_tlvs": {
-                "1": [
-                  {
-                    "local_block_length": 40,
-                    "local_node_length": 24,
-                    "function_length": 16,
-                    "transposition_length": 16,
-                    "transposition_offset": 64
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-        "SrcIP": "192:168:5::4",
-        "DstIP": "24.24.24.0",
-        "VPN_Prefix": "24.24.24.0",
-        "VPN_Prefix_Len": 30,
-        "RouterID": "192:168:5::4",
-        "PrefixSID": null,
-        "Origin_AS": "65004",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65034",
-        "RT": [
-          "5:65003",
-          "5:65030"
-        ],
-        "IPv4": true,
-        "SRv6_SID": {
-          "sub_tlvs": {
-            "1": [
-              {
-                "sid": "2001:0:5:4::",
-                "endpoint_behavior": 19,
-                "sub_sub_tlvs": {
-                  "1": [
-                    {
-                      "local_block_length": 40,
-                      "local_node_length": 24,
-                      "function_length": 16,
-                      "transposition_length": 16,
-                      "transposition_offset": 64
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-    },
-    {
-        "SrcIP": "192:168:5::4",
-        "DstIP": "192.168.5.2",
-        "VPN_Prefix": "192.168.5.2",
-        "VPN_Prefix_Len": 32,
-        "RouterID": "192:168:5::4",
-        "PrefixSID": null,
-        "Origin_AS": "65003",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65034",
-        "RT": [
-          "5:65003",
-          "5:65030"
-        ],
-        "IPv4": true,
-        "SRv6_SID": {
-          "sub_tlvs": {
-            "1": [
-              {
-                "sid": "2001:0:5:4::",
-                "endpoint_behavior": 19,
-                "sub_sub_tlvs": {
-                  "1": [
-                    {
-                      "local_block_length": 40,
-                      "local_node_length": 24,
-                      "function_length": 16,
-                      "transposition_length": 16,
-                      "transposition_offset": 64
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-    },
-    {
-        "SrcIP": "192:168:5::3",
-        "DstIP": "3.2.2.1",
-        "VPN_Prefix": "3.2.2.1",
-        "VPN_Prefix_Len": 32,
-        "RouterID": "192:168:5::3",
-        "PrefixSID": null,
-        "Origin_AS": "65002",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65023",
-        "RT": [
-          "5:65002",
-          "5:65020"
-        ],
-        "IPv4": true,
         "SRv6_SID": {
           "sub_tlvs": {
             "1": [
@@ -192,64 +31,25 @@
               }
             ]
           }
-        }
+        },
+      "ExtComm": [
+          "rt=5:65003",
+          "rt=5:65030"
+      ],
+      "IPv4": true
     },
-    {
-        "SrcIP": "192:168:5::4",
-        "DstIP": "4.2.2.1",
-        "VPN_Prefix": "4.2.2.1",
-        "VPN_Prefix_Len": 32,
-        "RouterID": "192:168:5::4",
-        "PrefixSID": null,
-        "Origin_AS": "65002",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65024",
-        "RT": [
-          "5:65002",
-          "5:65020"
-        ],
-        "IPv4": true,
-        "SRv6_SID": {
-          "sub_tlvs": {
-            "1": [
-              {
-                "sid": "2001:0:5:4::",
-                "endpoint_behavior": 19,
-                "sub_sub_tlvs": {
-                  "1": [
-                    {
-                      "local_block_length": 40,
-                      "local_node_length": 24,
-                      "function_length": 16,
-                      "transposition_length": 16,
-                      "transposition_offset": 64
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-    },
-    {
-        "SrcIP": "192:168:5::3",
-        "DstIP": "3.4.4.1",
-        "VPN_Prefix": "3.4.4.1",
-        "VPN_Prefix_Len": 32,
-        "RouterID": "192:168:5::3",
-        "PrefixSID": null,
-        "Origin_AS": "65004",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65043",
-        "RT": [
-          "5:65004",
-          "5:65040"
-        ],
-        "IPv4": true,
+      {
+      "_key": "5070:65033_192.168.5.1_32",
+      "_id": "L3VPNPrefix/5070:65033_192.168.5.1_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65033",
+      "Prefix": "192.168.5.1",
+      "Length": 32,
+      "RouterID": "192:168:5::3",
+      "ASN": 65003,
+      "VPN_Label": [
+        17152
+      ],
         "SRv6_SID": {
           "sub_tlvs": {
             "1": [
@@ -270,25 +70,25 @@
               }
             ]
           }
-        }
+        },
+      "ExtComm": [
+          "rt=5:65003",
+          "rt=5:65030"
+      ],
+      "IPv4": true
     },
-    {
-        "SrcIP": "192:168:5::4",
-        "DstIP": "4.4.4.1",
-        "VPN_Prefix": "4.4.4.1",
-        "VPN_Prefix_Len": 32,
-        "RouterID": "192:168:5::4",
-        "PrefixSID": null,
-        "Origin_AS": "65004",
-        "VPN_Label": [
-          17152
-        ],
-        "RD": "5070:65044",
-        "RT": [
-          "5:65003",
-          "5:65030"
-        ],
-        "IPv4": true,
+      {
+      "_key": "5070:65034_24.24.24.0_30",
+      "_id": "L3VPNPrefix/5070:65034_24.24.24.0_30",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65034",
+      "Prefix": "24.24.24.0",
+      "Length": 30,
+      "RouterID": "192:168:5::4",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
         "SRv6_SID": {
           "sub_tlvs": {
             "1": [
@@ -309,6 +109,206 @@
               }
             ]
           }
-        }
-    }            
+        },
+      "ExtComm": [
+          "rt=5:65003",
+          "rt=5:65030"
+      ],
+      "IPv4": true
+    },
+      {
+      "_key": "5070:65034_192.168.5.2_32",
+      "_id": "L3VPNPrefix/5070:65034_192.168.5.2_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65034",
+      "Prefix": "192.168.5.2",
+      "Length": 32,
+      "RouterID": "192:168:5::4",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
+        "SRv6_SID": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+      "ExtComm": [
+          "rt=5:65003",
+          "rt=5:65030"
+      ],
+      "IPv4": true
+    },
+      {
+      "_key": "5070:65023_3.2.2.1_32",
+      "_id": "L3VPNPrefix/5070:65023_3.2.2.1_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65023",
+      "Prefix": "3.2.2.1",
+      "Length": 32,
+      "RouterID": "192:168:5::3",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
+        "SRv6_SID": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:3::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+      "ExtComm": [
+          "rt=5:65002",
+          "rt=5:65020"
+      ],
+      "IPv4": true
+    },
+      {
+      "_key": "5070:65024_4.2.2.1_32",
+      "_id": "L3VPNPrefix/5070:65024_4.2.2.1_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65024",
+      "Prefix": "4.2.2.1",
+      "Length": 32,
+      "RouterID": "192:168:5::4",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
+        "SRv6_SID": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+      "ExtComm": [
+          "rt=5:65002",
+          "rt=5:65020"
+      ],
+      "IPv4": true
+    },
+      {
+      "_key": "5070:65043_3.4.4.1_32",
+      "_id": "L3VPNPrefix/5070:65043_3.4.4.1_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65024",
+      "Prefix": "3.4.4.1",
+      "Length": 32,
+      "RouterID": "192:168:5::3",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
+        "SRv6_SID": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:3::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+      "ExtComm": [
+          "rt=5:65004",
+          "rt=5:65040"
+      ],
+      "IPv4": true
+    },
+      {
+      "_key": "5070:65044_4.4.4.1_32",
+      "_id": "L3VPNPrefix/5070:65044_4.4.4.1_32",
+      "_rev": "_a78gDXq--L",
+      "RD": "5070:65024",
+      "Prefix": "4.4.4.1",
+      "Length": 32,
+      "RouterID": "192:168:5::4",
+      "ASN": 65004,
+      "VPN_Label": [
+        17152
+      ],
+        "SRv6_SID": {
+          "sub_tlvs": {
+            "1": [
+              {
+                "sid": "2001:0:5:4::",
+                "endpoint_behavior": 19,
+                "sub_sub_tlvs": {
+                  "1": [
+                    {
+                      "local_block_length": 40,
+                      "local_node_length": 24,
+                      "function_length": 16,
+                      "transposition_length": 16,
+                      "transposition_offset": 64
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+      "ExtComm": [
+          "rt=5:65004",
+          "rt=5:65040"
+      ],
+      "IPv4": true
+    }
   ]
