@@ -3,9 +3,21 @@ package dbclient
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
 
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
+	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
+	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
+)
+
+const (
+	// RouteTargetPrefix defines a string with a prefix identifying extended community as
+	// a route tareget extended community.
+	RouteTargetPrefix = "rt="
 )
 
 // DBClient defines methods a particular database client must implement
@@ -52,4 +64,40 @@ func GetRT(vpn *types.VRF, name string) (string, error) {
 
 	// Returning first route target found on the list of RTs
 	return rt[0], nil
+}
+
+// GetSRv6Prefixes builds a slice of SRv6L3Prefix from SRv6L3Record records
+func GetSRv6Prefixes(records []*types.SRv6L3Record) []*pbapi.SRv6L3Prefix {
+	result := make([]*pbapi.SRv6L3Prefix, len(records))
+	i := 0
+	for _, r := range records {
+		p := &pbapi.SRv6L3Prefix{
+			Prefix: &pbapi.Prefix{
+				Address:    net.ParseIP(r.Prefix).To4(),
+				MaskLength: uint32(r.PrefixLen),
+			},
+			Label:     int32(r.Labels[0]),
+			NhAddress: net.ParseIP(r.Nexthop).To16(),
+			PrefixSid: &pbapi.PrefixSID{},
+		}
+		p.Asn = uint32(r.OriginAS)
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
+		rts := make([]*any.Any, 0)
+		for _, s := range r.ExtComm {
+			if !strings.HasPrefix(s, RouteTargetPrefix) {
+				continue
+			}
+			// Found route target extended community, removing route target prefix and marshal it.
+			rt, err := bgpclient.MarshalRTFromString(strings.TrimPrefix(s, RouteTargetPrefix))
+			if err != nil {
+				continue
+			}
+			rts = append(rts, rt)
+		}
+		p.Rt = rts
+		result[i] = p
+		i++
+	}
+
+	return result
 }

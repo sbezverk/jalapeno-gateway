@@ -5,15 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
-	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
@@ -24,15 +20,9 @@ const (
 	vrfDataFile  = "./testdata/vrfs_data.json"
 )
 
-const (
-	// RouteTargetPrefix defines a string with a prefix identifying extended community as
-	// a route tareget extended community.
-	RouteTargetPrefix = "rt="
-)
-
 type mockSrv struct {
 	mplsStore []types.MPLSL3Record
-	srv6Store []types.SRv6L3Record
+	srv6Store []*types.SRv6L3Record
 	vrfStore  map[string]*types.VRF
 }
 
@@ -81,42 +71,14 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
 	}
-	records := make([]types.SRv6L3Record, 0)
+	records := make([]*types.SRv6L3Record, 0)
 	records = filterByRTSRv6L3Record([]string{req.RT}, m.srv6Store)
 
 	if len(records) == 0 {
 		// All filtered, returning error
 		return nil, fmt.Errorf("no matching records to found")
 	}
-
-	for _, r := range records {
-		p := &pbapi.SRv6L3Prefix{
-			Prefix: &pbapi.Prefix{
-				Address:    net.ParseIP(r.Prefix).To4(),
-				MaskLength: uint32(r.PrefixLen),
-			},
-			Label:     int32(r.Labels[0]),
-			NhAddress: net.ParseIP(r.Nexthop).To16(),
-			PrefixSid: &pbapi.PrefixSID{},
-		}
-		p.Asn = uint32(r.OriginAS)
-		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
-		rts := make([]*any.Any, 0)
-		for _, s := range r.ExtComm {
-			if !strings.HasPrefix(s, RouteTargetPrefix) {
-				continue
-			}
-			// Found route target extended community, removing route target prefix and marshal it.
-			rt, err := bgpclient.MarshalRTFromString(strings.TrimPrefix(s, RouteTargetPrefix))
-			if err != nil {
-				continue
-			}
-			rts = append(rts, rt)
-		}
-		p.Rt = rts
-		srv6Prefix = append(srv6Prefix, p)
-	}
-	resp.Prefix = srv6Prefix
+	resp.Prefix = dbclient.GetSRv6Prefixes(records)
 
 	return &resp, nil
 }
@@ -187,16 +149,16 @@ func filterByRT(rts []string, records []types.MPLSL3Record) []types.MPLSL3Record
 	return result
 }
 
-func filterByRTSRv6L3Record(rts []string, records []types.SRv6L3Record) []types.SRv6L3Record {
-	result := make([]types.SRv6L3Record, 0)
+func filterByRTSRv6L3Record(rts []string, records []*types.SRv6L3Record) []*types.SRv6L3Record {
+	result := make([]*types.SRv6L3Record, 0)
 	found := false
 	for _, r := range records {
 		for _, extComm := range r.ExtComm {
-			if !strings.HasPrefix(extComm, RouteTargetPrefix) {
+			if !strings.HasPrefix(extComm, dbclient.RouteTargetPrefix) {
 				continue
 			}
 			for _, rrt := range rts {
-				if rrt == strings.TrimPrefix(extComm, RouteTargetPrefix) {
+				if rrt == strings.TrimPrefix(extComm, dbclient.RouteTargetPrefix) {
 					result = append(result, r)
 					found = true
 					break
@@ -231,7 +193,7 @@ func NewMockDBClient() dbclient.DBClient {
 	vrfs := make([]*types.VRF, 0)
 	ds := mockSrv{
 		mplsStore: make([]types.MPLSL3Record, 0),
-		srv6Store: make([]types.SRv6L3Record, 0),
+		srv6Store: make([]*types.SRv6L3Record, 0),
 		vrfStore:  make(map[string]*types.VRF),
 	}
 

@@ -17,23 +17,21 @@ const (
 	rtCollection  = "L3VPN_RT"
 )
 
+// RTRecord defines route target record
+type RTRecord struct {
+	ID       string            `json:"_id,omitempty"`
+	Key      string            `json:"_key,omitempty"`
+	RT       string            `json:"RT,omitempty"`
+	Prefixes map[string]string `json:"Prefixes,omitempty"`
+}
+
 func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, error) {
 	glog.V(5).Infof("Arango DB VPN RT request for VPN: %s", name)
-
-	found, err := a.db.CollectionExists(ctx, vrfCollection)
+	vrf, err := getCollection(ctx, a, vrfCollection)
 	if err != nil {
 		return "", err
 	}
-	if !found {
-		return "", fmt.Errorf("collection %s does not exist", vrfCollection)
-	}
-	vrf, err := a.db.Collection(ctx, vrfCollection)
-	if err != nil {
-		return "", err
-	}
-
 	vpn := &types.VRF{}
-
 	if _, err := vrf.ReadDocument(ctx, name, vpn); err != nil {
 		return "", err
 	}
@@ -41,10 +39,47 @@ func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, erro
 	return dbclient.GetRT(vpn, name)
 }
 
-func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
-	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %+v", req)
+func getCollection(ctx context.Context, a *arangoSrv, name string) (driver.Collection, error) {
+	found, err := a.db.CollectionExists(ctx, fibCollection)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("collection %s does not exist", fibCollection)
+	}
 
-	return &types.SRv6L3VpnResp{}, nil
+	return a.db.Collection(ctx, name)
+}
+
+func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
+	glog.V(5).Infof("Arango DB L3 VPN Service was called with the request: %s", req.RT)
+	fib, err := getCollection(ctx, a, fibCollection)
+	if err != nil {
+		return nil, err
+	}
+	rt, err := getCollection(ctx, a, rtCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	rtr := &RTRecord{}
+	if _, err := rt.ReadDocument(ctx, req.RT, rtr); err != nil {
+		return nil, err
+	}
+	resp := &types.SRv6L3VpnResp{}
+	records := make([]*types.SRv6L3Record, len(rtr.Prefixes))
+	i := 0
+	for _, v := range rtr.Prefixes {
+		r := &types.SRv6L3Record{}
+		if _, err := fib.ReadDocument(ctx, v, r); err != nil {
+			return nil, err
+		}
+		records[i] = r
+		i++
+	}
+	resp.Prefix = dbclient.GetSRv6Prefixes(records)
+
+	return resp, nil
 }
 
 func (a *arangoSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.MPLSL3VpnResp, error) {
