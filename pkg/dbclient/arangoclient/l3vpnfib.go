@@ -10,10 +10,51 @@ import (
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
 
+const (
+	vrfCollection = "Bell_VRF"
+	fibCollection = "L3VPNPrefix"
+	rtCollection  = "L3VPN_RT"
+)
+
 func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, error) {
 	glog.V(5).Infof("Arango DB VPN RT request for VPN: %s", name)
 
-	return "", nil
+	found, err := a.db.CollectionExists(ctx, vrfCollection)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("collection %s does not exist", vrfCollection)
+	}
+	vrf, err := a.db.Collection(ctx, vrfCollection)
+	if err != nil {
+		return "", err
+	}
+
+	vpn := &types.VRF{}
+
+	if _, err := vrf.ReadDocument(ctx, name, vpn); err != nil {
+		return "", err
+	}
+
+	if vpn.ConfigParameters == nil {
+		return "", fmt.Errorf("vpn %s does not have cpnfiguration parameters", name)
+	}
+	af, ok := vpn.ConfigParameters.AddressFamilies[types.IPv4Unicast]
+	if !ok {
+		return "", fmt.Errorf("vpn %s does not have IPv4 Unicast address family", name)
+	}
+	if af == nil {
+		return "", fmt.Errorf("vpn %s address family IPv4 Unicast is nil", name)
+	}
+	rt := af.RouteTargets[types.RouteTargetLocationCore][types.RouteTargetActionImport][types.RouteTargetTypeNative]
+	if len(rt) == 0 {
+		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
+	}
+	glog.Infof("><SB> VPN: %s RT: %s", name, rt[0])
+	// Returning first route target found on the list of RTs
+	return rt[0], nil
+
 }
 
 func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
