@@ -7,6 +7,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/golang/glog"
 	"github.com/sbezverk/jalapeno-gateway/pkg/apis"
+	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
 
@@ -37,24 +38,7 @@ func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, erro
 		return "", err
 	}
 
-	if vpn.ConfigParameters == nil {
-		return "", fmt.Errorf("vpn %s does not have cpnfiguration parameters", name)
-	}
-	af, ok := vpn.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-	if !ok {
-		return "", fmt.Errorf("vpn %s does not have IPv4 Unicast address family", name)
-	}
-	if af == nil {
-		return "", fmt.Errorf("vpn %s address family IPv4 Unicast is nil", name)
-	}
-	rt := af.RouteTargets[types.RouteTargetLocationCore][types.RouteTargetActionImport][types.RouteTargetTypeNative]
-	if len(rt) == 0 {
-		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
-	}
-	glog.Infof("><SB> VPN: %s RT: %s", name, rt[0])
-	// Returning first route target found on the list of RTs
-	return rt[0], nil
-
+	return dbclient.GetRT(vpn, name)
 }
 
 func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
