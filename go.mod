@@ -3,6 +3,7 @@ module github.com/sbezverk/jalapeno-gateway
 go 1.13
 
 require (
+	github.com/arangodb/go-driver v0.0.0-20200403100147-ca5dd87ffe93
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.0

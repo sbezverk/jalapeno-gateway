@@ -114,7 +114,6 @@ func (cp *ConfigParameters) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &objmap); err != nil {
 		return err
 	}
-
 	cp.BGP = &BGP{}
 	if bgp, ok := objmap["bgp"]; ok {
 		if err := json.Unmarshal(bgp, cp.BGP); err != nil {
@@ -125,11 +124,17 @@ func (cp *ConfigParameters) UnmarshalJSON(b []byte) error {
 	if af, ok := objmap["address_families"]; ok {
 		// Loop through the list of address families and construct a map
 		afs := make([]*AddressFamily, 0)
-		if err := json.Unmarshal(af, &afs); err != nil {
-			return err
-		}
-		for _, af := range afs {
-			cp.AddressFamilies[af.AFName+af.SAFIName] = af
+		// Address Family can be in two forms, when read from ElasticSearch it comes as a slice,
+		// but in native form it is a map. Hence two attempts to unmarshal it. Only if both fail,
+		// this function returns error.
+		if err := json.Unmarshal(af, &afs); err == nil {
+			for _, af := range afs {
+				cp.AddressFamilies[af.AFName+af.SAFIName] = af
+			}
+		} else {
+			if err := json.Unmarshal(af, &cp.AddressFamilies); err != nil {
+				return err
+			}
 		}
 	}
 

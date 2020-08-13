@@ -35,16 +35,14 @@ func (g *gateway) SRv6L3VPN(ctx context.Context, req *pbapi.L3VpnRequest) (*pbap
 	// Check each attribute and prepare it for NewL3VpnReq call
 	var err error
 	m := "SRv6 L3 request for "
-	if req.VpnName != "" {
-		m += "VPN Name: " + req.VpnName
-	}
+
 	var rt []bgp.ExtendedCommunityInterface
 	if req.Rt != nil {
 		rt, err = bgpclient.UnmarshalRT([]*any.Any{req.Rt})
 		if err != nil {
 			return &pbapi.SRv6L3Response{}, err
 		}
-		m += "RTs: "
+		m += "RT: " + rt[0].String()
 	}
 	glog.V(5).Infof("%s", m)
 	rq := dbclient.NewL3VpnReq(req.VpnName, rt[0].String(), req.Ipv4)

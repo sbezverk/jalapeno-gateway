@@ -135,17 +135,14 @@ type MPLSL3Record struct {
 type SRv6L3Record struct {
 	Key       string          `json:"_key,omitempty"`
 	ID        string          `json:"_id,omitempty"`
-	From      string          `json:"_from,omitempty"`
-	To        string          `json:"_to,omitempty"`
-	Rev       string          `json:"_rev,omitempty"`
-	Prefix    string          `json:"VPN_Prefix,omitempty"`
-	PrefixLen int32           `json:"VPN_Prefix_Len,omitempty"`
+	Prefix    string          `json:"Prefix,omitempty"`
+	PrefixLen int32           `json:"Length,omitempty"`
 	IsIPv4    bool            `json:"IPv4"`
-	OriginAS  string          `json:"Origin_AS,omitempty"`
-	Nexthop   string          `json:"SrcIP,omitempty"`
+	OriginAS  int32           `json:"ASN,omitempty"`
+	Nexthop   string          `json:"RouterID,omitempty"`
 	Labels    []uint32        `json:"VPN_Label,omitempty"`
 	RD        string          `json:"RD,omitempty"`
-	RT        []string        `json:"RT,omitempty"`
+	ExtComm   []string        `json:"ExtComm,omitempty"`
 	SRv6SID   *srv6.L3Service `json:"SRv6_SID,omitempty"`
 }
 

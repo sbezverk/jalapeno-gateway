@@ -12,7 +12,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 
-	//	arango "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient"
+	arango "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/arangoclient"
 	mock "github.com/sbezverk/jalapeno-gateway/pkg/dbclient/dbmockclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/gateway"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
@@ -71,11 +71,11 @@ func main() {
 
 	var dbc srvclient.SrvClient
 	if !isMock {
-		// dbc, err = makeDBClient(dbAddr)
-		// if err != nil {
-		// 	glog.Errorf("failed to make db client with with error: %+v", err)
-		// 	os.Exit(1)
-		// }
+		dbc, err = makeDBClient(dbAddr)
+		if err != nil {
+			glog.Errorf("failed to make db client with with error: %+v", err)
+			os.Exit(1)
+		}
 	} else {
 		dbc, err = makeMockDBClient()
 		if err != nil {
@@ -114,16 +114,16 @@ func makeMockDBClient() (srvclient.SrvClient, error) {
 	return db, nil
 }
 
-// func makeDBClient(addr string) (srvclient.SrvClient, error) {
-// 	// TODO, Authentication credentials should be passed as a parameters.
-// 	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno", "L3VPN_FIB"))
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
-// 	}
-// 	glog.Infof("Connected to ArangoDB")
+func makeDBClient(addr string) (srvclient.SrvClient, error) {
+	// TODO, Authentication credentials should be passed as a parameters.
+	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno", "L3VPN_FIB"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
+	}
+	glog.Infof("Connected to ArangoDB")
 
-// 	return db, nil
-// }
+	return db, nil
+}
 
 func makeBGPClient(addr string) (srvclient.SrvClient, error) {
 	bgp, err := srvclient.NewSrvClient(addr, bgpclient.NewBGPSrv())

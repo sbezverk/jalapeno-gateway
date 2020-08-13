@@ -5,16 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
-	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
@@ -27,8 +22,8 @@ const (
 
 type mockSrv struct {
 	mplsStore []types.MPLSL3Record
-	srv6Store []types.SRv6L3Record
-	vrfStore  map[string]types.VRF
+	srv6Store []*types.SRv6L3Record
+	vrfStore  map[string]*types.VRF
 }
 
 func (m *mockSrv) MPLSL3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.MPLSL3VpnResp, error) {
@@ -76,42 +71,14 @@ func (m *mockSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*t
 	resp := types.SRv6L3VpnResp{
 		Prefix: srv6Prefix,
 	}
-	records := make([]types.SRv6L3Record, 0)
+	records := make([]*types.SRv6L3Record, 0)
 	records = filterByRTSRv6L3Record([]string{req.RT}, m.srv6Store)
 
 	if len(records) == 0 {
 		// All filtered, returning error
 		return nil, fmt.Errorf("no matching records to found")
 	}
-
-	for _, r := range records {
-		p := &pbapi.SRv6L3Prefix{
-			Prefix: &pbapi.Prefix{
-				Address:    net.ParseIP(r.Prefix).To4(),
-				MaskLength: uint32(r.PrefixLen),
-			},
-			Label:     int32(r.Labels[0]),
-			NhAddress: net.ParseIP(r.Nexthop).To16(),
-			PrefixSid: &pbapi.PrefixSID{},
-		}
-		asn, err := strconv.Atoi(r.OriginAS)
-		if err != nil {
-			continue
-		}
-		p.Asn = uint32(asn)
-		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
-		rts := make([]*any.Any, 0)
-		for _, s := range r.RT {
-			rt, err := bgpclient.MarshalRTFromString(s)
-			if err != nil {
-				continue
-			}
-			rts = append(rts, rt)
-		}
-		p.Rt = rts
-		srv6Prefix = append(srv6Prefix, p)
-	}
-	resp.Prefix = srv6Prefix
+	resp.Prefix = dbclient.GetSRv6Prefixes(records)
 
 	return &resp, nil
 }
@@ -121,23 +88,7 @@ func (m *mockSrv) VPNRTRequest(ctx context.Context, name string) (string, error)
 	if !ok {
 		return "", fmt.Errorf("vpn %s does not exist", name)
 	}
-	if vpn.ConfigParameters == nil {
-		return "", fmt.Errorf("vpn %s does not have cpnfiguration parameters", name)
-	}
-	af, ok := vpn.ConfigParameters.AddressFamilies[types.IPv4Unicast]
-	if !ok {
-		return "", fmt.Errorf("vpn %s does not have IPv4 Unicast address family", name)
-	}
-	if af == nil {
-		return "", fmt.Errorf("vpn %s address family IPv4 Unicast is nil", name)
-	}
-	rt := af.RouteTargets[types.RouteTargetLocationCore][types.RouteTargetActionImport][types.RouteTargetTypeNative]
-	if len(rt) == 0 {
-		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
-	}
-
-	// Returning first route target found on the list of RTs
-	return rt[0], nil
+	return dbclient.GetRT(vpn, name)
 }
 
 func (m *mockSrv) Connector(addr string) error {
@@ -198,13 +149,16 @@ func filterByRT(rts []string, records []types.MPLSL3Record) []types.MPLSL3Record
 	return result
 }
 
-func filterByRTSRv6L3Record(rts []string, records []types.SRv6L3Record) []types.SRv6L3Record {
-	result := make([]types.SRv6L3Record, 0)
+func filterByRTSRv6L3Record(rts []string, records []*types.SRv6L3Record) []*types.SRv6L3Record {
+	result := make([]*types.SRv6L3Record, 0)
 	found := false
 	for _, r := range records {
-		for _, ert := range r.RT {
+		for _, extComm := range r.ExtComm {
+			if !strings.HasPrefix(extComm, dbclient.RouteTargetPrefix) {
+				continue
+			}
 			for _, rrt := range rts {
-				if rrt == ert {
+				if rrt == strings.TrimPrefix(extComm, dbclient.RouteTargetPrefix) {
 					result = append(result, r)
 					found = true
 					break
@@ -236,11 +190,11 @@ func NewMockDBClient() dbclient.DBClient {
 		return nil
 	}
 
-	vrfs := make([]types.VRF, 0)
+	vrfs := make([]*types.VRF, 0)
 	ds := mockSrv{
 		mplsStore: make([]types.MPLSL3Record, 0),
-		srv6Store: make([]types.SRv6L3Record, 0),
-		vrfStore:  make(map[string]types.VRF),
+		srv6Store: make([]*types.SRv6L3Record, 0),
+		vrfStore:  make(map[string]*types.VRF),
 	}
 
 	if err := json.Unmarshal(mplsdata, &ds.mplsStore); err != nil {
