@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
@@ -30,7 +31,6 @@ type DBClient interface {
 
 // DBServices defines interface for Database Services
 type DBServices interface {
-	MPLSL3VpnRequest(context.Context, *types.L3VpnReq) (*types.MPLSL3VpnResp, error)
 	SRv6L3VpnRequest(context.Context, *types.L3VpnReq) (*types.SRv6L3VpnResp, error)
 	VPNRTRequest(context.Context, string) (string, error)
 }
@@ -61,6 +61,7 @@ func GetRT(vpn *types.VRF, name string) (string, error) {
 	if len(rt) == 0 {
 		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
 	}
+	glog.V(5).Infof("vpn %s's route target: %+v", name, rt)
 
 	// Returning first route target found on the list of RTs
 	return rt[0], nil

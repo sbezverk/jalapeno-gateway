@@ -3,7 +3,6 @@ syntax = "proto3";
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "prefixsid.proto";
-import "mpls.proto";
 import "bgp.proto";
 
 package apis;
@@ -38,8 +37,6 @@ message Client {
 
 message SRv6L3Response { repeated apis.SRv6L3Prefix srv6_prefix = 1; }
 
-message MPLSL3Response { repeated apis.MPLSL3Prefix mpls_prefix = 1; }
-
 message VpnRTResponse {
   // rt identifies requested vpn route target
   google.protobuf.Any rt = 1;
@@ -47,7 +44,6 @@ message VpnRTResponse {
 // GatewayService lists rpc services supported by the gateway api
 service GatewayService {
   rpc Monitor(stream Client) returns (google.protobuf.Empty);
-  rpc MPLSL3VPN(L3VpnRequest) returns (MPLSL3Response);
   rpc SRv6L3VPN(L3VpnRequest) returns (SRv6L3Response);
   rpc VpnRT(VpnRTRequest) returns (VpnRTResponse);
   rpc AddIPv6UnicatRoute(IPv6UnicastRoute) returns (google.protobuf.Empty);

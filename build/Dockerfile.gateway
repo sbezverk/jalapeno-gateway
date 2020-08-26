@@ -1,6 +1,5 @@
 FROM scratch
 
-ADD ./testdata/testdata-mpls.json /testdata/testdata-mpls.json
 ADD ./testdata/testdata-srv6.json /testdata/testdata-srv6.json
 ADD ./testdata/vrfs_data.json /testdata/vrfs_data.json
 COPY ./bin/jalapeno-gateway /jalapeno-gateway
