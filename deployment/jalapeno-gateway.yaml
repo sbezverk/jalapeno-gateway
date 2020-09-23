@@ -18,17 +18,15 @@ spec:
     app: jalapeno-gateway
   type: ClusterIP
   externalIPs:
-    - 192.168.80.104
+    - 10.1.1.100
 metadata:
   name: jalapeno-gateway
   namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata:
-  name: jalapeno-gateway
 spec:
-  replicas: 1 
+  replicas: 1
   selector:
     matchLabels:
       app: jalapeno-gateway
@@ -39,7 +37,7 @@ spec:
     spec:
       containers:
         - name: jalapeno-gateway
-          image: docker.io/sbezverk/jalapeno-gateway-debug:0.0.10
+          image: docker.io/sbezverk/jalapeno-gateway-debug:wip
           imagePullPolicy: Always
           ports:
             - containerPort: 40040
@@ -50,13 +48,13 @@ spec:
               mountPath: /config
           args:
             - --database-address
-            - "http://arangodb.jalapeno:8529"
+            - "http://arangodb.arangodb:28529"
             - --gobgp-address
             - "gobgpd:5051"
             - --v
             - "5"
             - --mock-data
-            - "true"
+            - "false"
       volumes:
         - name: config-volume
           configMap:

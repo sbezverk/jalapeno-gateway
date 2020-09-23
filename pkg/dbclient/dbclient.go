@@ -6,18 +6,13 @@ import (
 	"net"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/sbezverk/gobmp/pkg/prefixsid"
+	"github.com/sbezverk/gobmp/pkg/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/bgpclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/srvclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
-)
-
-const (
-	// RouteTargetPrefix defines a string with a prefix identifying extended community as
-	// a route tareget extended community.
-	RouteTargetPrefix = "rt="
 )
 
 // DBClient defines methods a particular database client must implement
@@ -30,7 +25,6 @@ type DBClient interface {
 
 // DBServices defines interface for Database Services
 type DBServices interface {
-	MPLSL3VpnRequest(context.Context, *types.L3VpnReq) (*types.MPLSL3VpnResp, error)
 	SRv6L3VpnRequest(context.Context, *types.L3VpnReq) (*types.SRv6L3VpnResp, error)
 	VPNRTRequest(context.Context, string) (string, error)
 }
@@ -61,6 +55,7 @@ func GetRT(vpn *types.VRF, name string) (string, error) {
 	if len(rt) == 0 {
 		return "", fmt.Errorf("vpn %s does not have %s %s %s route target", name, types.RouteTargetLocationCore, types.RouteTargetActionImport, types.RouteTargetTypeNative)
 	}
+	glog.V(5).Infof("vpn %s's route target: %+v", name, rt)
 
 	// Returning first route target found on the list of RTs
 	return rt[0], nil
@@ -81,14 +76,14 @@ func GetSRv6Prefixes(records []*types.SRv6L3Record) []*pbapi.SRv6L3Prefix {
 			PrefixSid: &pbapi.PrefixSID{},
 		}
 		p.Asn = uint32(r.OriginAS)
-		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(&prefixsid.PSid{SRv6L3Service: r.SRv6SID})
+		p.PrefixSid.Tlvs = bgpclient.MarshalPrefixSID(r.PrefixSID)
 		rts := make([]*any.Any, 0)
-		for _, s := range r.ExtComm {
-			if !strings.HasPrefix(s, RouteTargetPrefix) {
+		for _, s := range r.BaseAttributes.ExtCommunityList {
+			if !strings.HasPrefix(s, bgp.ECPRouteTarget) {
 				continue
 			}
 			// Found route target extended community, removing route target prefix and marshal it.
-			rt, err := bgpclient.MarshalRTFromString(strings.TrimPrefix(s, RouteTargetPrefix))
+			rt, err := bgpclient.MarshalRTFromString(strings.TrimPrefix(s, bgp.ECPRouteTarget))
 			if err != nil {
 				continue
 			}

@@ -100,8 +100,3 @@ func NewArangoDBClient(user string, pass string, dbName string, collection strin
 		collection: collection,
 	}
 }
-
-type filter struct {
-	key   string
-	value interface{}
-}
