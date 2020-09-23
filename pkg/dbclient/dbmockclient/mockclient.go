@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/sbezverk/gobmp/pkg/bgp"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 	"github.com/sbezverk/jalapeno-gateway/pkg/dbclient"
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
@@ -71,12 +72,12 @@ func filterByRTSRv6L3Record(rts []string, records []*types.SRv6L3Record) []*type
 	result := make([]*types.SRv6L3Record, 0)
 	found := false
 	for _, r := range records {
-		for _, extComm := range r.ExtComm {
-			if !strings.HasPrefix(extComm, dbclient.RouteTargetPrefix) {
+		for _, extComm := range r.BaseAttributes.ExtCommunityList {
+			if !strings.HasPrefix(extComm, bgp.ECPRouteTarget) {
 				continue
 			}
 			for _, rrt := range rts {
-				if rrt == strings.TrimPrefix(extComm, dbclient.RouteTargetPrefix) {
+				if rrt == strings.TrimPrefix(extComm, bgp.ECPRouteTarget) {
 					result = append(result, r)
 					found = true
 					break

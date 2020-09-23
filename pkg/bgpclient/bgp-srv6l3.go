@@ -117,7 +117,6 @@ func (bgp *bgpClient) delSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 	if p == nil {
 		return fmt.Errorf("prefix is nil")
 	}
-
 	nlrivpn, _ := ptypes.MarshalAny(&api.LabeledVPNIPAddressPrefix{
 		Labels:    []uint32{uint32(p.Label)},
 		Rd:        p.Rd,
@@ -151,7 +150,7 @@ func (bgp *bgpClient) delSRv6L3Route(p *pbapi.SRv6L3Prefix) error {
 			SourceAsn: p.Asn,
 		},
 	}); err != nil {
-		return fmt.Errorf("failed to run DelPath call with error: %v", err)
+		return fmt.Errorf("failed to run BGP DeletePath call with error: %v", err)
 	}
 
 	return nil

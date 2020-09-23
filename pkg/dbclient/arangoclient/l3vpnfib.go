@@ -12,8 +12,8 @@ import (
 
 const (
 	vrfCollection = "Bell_VRF"
-	fibCollection = "L3VPN_Prefix"
-	rtCollection  = "L3VPN_RT"
+	fibCollection = "L3VPN_Prefix_Test"
+	rtCollection  = "RT_L3VPN_Test"
 )
 
 // RTRecord defines route target record

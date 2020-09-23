@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/sbezverk/gobmp/pkg/bgp"
+	"github.com/sbezverk/gobmp/pkg/prefixsid"
 	"github.com/sbezverk/gobmp/pkg/srv6"
 	pbapi "github.com/sbezverk/jalapeno-gateway/pkg/apis"
 )
@@ -113,17 +115,17 @@ type Hit struct {
 
 // SRv6L3Record represents the database record structure
 type SRv6L3Record struct {
-	Key       string          `json:"_key,omitempty"`
-	ID        string          `json:"_id,omitempty"`
-	Prefix    string          `json:"Prefix,omitempty"`
-	PrefixLen int32           `json:"Length,omitempty"`
-	IsIPv4    bool            `json:"IPv4"`
-	OriginAS  int32           `json:"ASN,omitempty"`
-	Nexthop   string          `json:"RouterID,omitempty"`
-	Labels    []uint32        `json:"VPN_Label,omitempty"`
-	RD        string          `json:"RD,omitempty"`
-	ExtComm   []string        `json:"ExtComm,omitempty"`
-	SRv6SID   *srv6.L3Service `json:"SRv6_SID,omitempty"`
+	Key            string              `json:"_key,omitempty"`
+	ID             string              `json:"_id,omitempty"`
+	Prefix         string              `json:"prefix,omitempty"`
+	PrefixLen      int32               `json:"prefix_len,omitempty"`
+	IsIPv4         bool                `json:"is_ipv4"`
+	OriginAS       int32               `json:"origin_as,omitempty"`
+	Nexthop        string              `json:"nexthop,omitempty"`
+	Labels         []uint32            `json:"labels,omitempty"`
+	RD             string              `json:"vpn_rd,omitempty"`
+	BaseAttributes *bgp.BaseAttributes `json:"base_attrs,omitempty"`
+	PrefixSID      *prefixsid.PSid     `json:"prefix_sid,omitempty"`
 }
 
 // L3VpnReq defines data struct for L3 VPN database request

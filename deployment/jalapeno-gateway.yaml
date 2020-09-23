@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
         - name: jalapeno-gateway
-          image: docker.io/sbezverk/jalapeno-gateway-debug:0.0.11
+          image: docker.io/sbezverk/jalapeno-gateway-debug:wip
           imagePullPolicy: Always
           ports:
             - containerPort: 40040
