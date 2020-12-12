@@ -63,9 +63,11 @@ func GetRT(vpn *types.VRF, name string) (string, error) {
 
 // GetSRv6Prefixes builds a slice of SRv6L3Prefix from SRv6L3Record records
 func GetSRv6Prefixes(records []*types.SRv6L3Record) []*pbapi.SRv6L3Prefix {
-	result := make([]*pbapi.SRv6L3Prefix, len(records))
-	i := 0
+	result := make([]*pbapi.SRv6L3Prefix, 0, len(records))
 	for _, r := range records {
+		if r == nil {
+			continue
+		}
 		p := &pbapi.SRv6L3Prefix{
 			Prefix: &pbapi.Prefix{
 				Address:    net.ParseIP(r.Prefix).To4(),
@@ -90,8 +92,7 @@ func GetSRv6Prefixes(records []*types.SRv6L3Record) []*pbapi.SRv6L3Prefix {
 			rts = append(rts, rt)
 		}
 		p.Rt = rts
-		result[i] = p
-		i++
+		result = append(result, p)
 	}
 
 	return result

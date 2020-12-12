@@ -10,12 +10,6 @@ import (
 	"github.com/sbezverk/jalapeno-gateway/pkg/types"
 )
 
-const (
-	vrfCollection = "Bell_VRF"
-	fibCollection = "L3VPN_Prefix_Test"
-	rtCollection  = "RT_L3VPN_Test"
-)
-
 // RTRecord defines route target record
 type RTRecord struct {
 	ID       string            `json:"_id,omitempty"`
@@ -26,7 +20,7 @@ type RTRecord struct {
 
 func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, error) {
 	glog.V(5).Infof("requesting a route target for vpn %q", name)
-	vrf, err := getCollection(ctx, a, vrfCollection)
+	vrf, err := getCollection(ctx, a, a.vrfCollection)
 	if err != nil {
 		return "", err
 	}
@@ -40,12 +34,12 @@ func (a *arangoSrv) VPNRTRequest(ctx context.Context, name string) (string, erro
 }
 
 func getCollection(ctx context.Context, a *arangoSrv, name string) (driver.Collection, error) {
-	found, err := a.db.CollectionExists(ctx, fibCollection)
+	found, err := a.db.CollectionExists(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 	if !found {
-		return nil, fmt.Errorf("collection %s does not exist", fibCollection)
+		return nil, fmt.Errorf("collection %s does not exist", name)
 	}
 
 	return a.db.Collection(ctx, name)
@@ -53,11 +47,11 @@ func getCollection(ctx context.Context, a *arangoSrv, name string) (driver.Colle
 
 func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (*types.SRv6L3VpnResp, error) {
 	glog.V(5).Infof("requesting srv6 prefixes for a route target: %s", req.RT)
-	fib, err := getCollection(ctx, a, fibCollection)
+	fib, err := getCollection(ctx, a, a.fibCollection)
 	if err != nil {
 		return nil, err
 	}
-	rt, err := getCollection(ctx, a, rtCollection)
+	rt, err := getCollection(ctx, a, a.rtCollection)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +62,7 @@ func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (
 	}
 	glog.V(5).Infof("found %d prefixes a route target %s", len(rtr.Prefixes), req.RT)
 	resp := &types.SRv6L3VpnResp{}
-	records := make([]*types.SRv6L3Record, len(rtr.Prefixes))
-	i := 0
+	records := make([]*types.SRv6L3Record, 0, len(rtr.Prefixes))
 	for _, v := range rtr.Prefixes {
 		r := &types.SRv6L3Record{}
 		if _, err := fib.ReadDocument(ctx, v, r); err != nil {
@@ -77,8 +70,7 @@ func (a *arangoSrv) SRv6L3VpnRequest(ctx context.Context, req *types.L3VpnReq) (
 			glog.Errorf("inconsistency between l3vpn route target collection %q and l3vpn prefix collection %q found, please report a software bug", rt.Name(), fib.Name())
 			continue
 		}
-		records[i] = r
-		i++
+		records = append(records, r)
 	}
 	resp.Prefix = dbclient.GetSRv6Prefixes(records)
 	glog.V(5).Infof("processed %d prefixes for a route target %s", len(records), req.RT)

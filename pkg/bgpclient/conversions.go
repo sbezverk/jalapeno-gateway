@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	api "github.com/osrg/gobgp/api"

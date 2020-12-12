@@ -20,13 +20,15 @@ var (
 )
 
 type arangoSrv struct {
-	user       string
-	pass       string
-	dbName     string
-	conn       driver.Connection
-	client     driver.Client
-	db         driver.Database
-	collection string
+	user          string
+	pass          string
+	dbName        string
+	conn          driver.Connection
+	client        driver.Client
+	db            driver.Database
+	vrfCollection string
+	fibCollection string
+	rtCollection  string
 }
 
 func (a *arangoSrv) Connector(addr string) error {
@@ -57,7 +59,8 @@ func (a *arangoSrv) Connector(addr string) error {
 }
 
 func (a *arangoSrv) Monitor(addr string) error {
-	_, err := a.db.CollectionExists(context.TODO(), a.collection)
+	// TODO (sbezverk) Come up with a better way to track connection with Arangodb
+	_, err := a.db.CollectionExists(context.TODO(), a.fibCollection)
 	if err != nil {
 		return err
 	}
@@ -92,11 +95,14 @@ func (a *arangoSrv) Validator(addr string) error {
 }
 
 // NewArangoDBClient returns an instance of a new Arango database client process
-func NewArangoDBClient(user string, pass string, dbName string, collection string) dbclient.DBClient {
+func NewArangoDBClient(user string, pass string, dbName string) dbclient.DBClient {
 	return &arangoSrv{
-		user:       user,
-		pass:       pass,
-		dbName:     dbName,
-		collection: collection,
+		user:   user,
+		pass:   pass,
+		dbName: dbName,
+		// TODO (sbezverk) define variables
+		vrfCollection: "Bell_VRF",
+		fibCollection: "L3VPNV4_Prefix_Test",
+		rtCollection:  "RT_L3VPNV4_Test",
 	}
 }

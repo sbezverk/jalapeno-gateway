@@ -116,7 +116,7 @@ func makeMockDBClient() (srvclient.SrvClient, error) {
 
 func makeDBClient(addr string) (srvclient.SrvClient, error) {
 	// TODO, Authentication credentials should be passed as a parameters.
-	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno", "L3VPN_FIB"))
+	db, err := srvclient.NewSrvClient(addr, arango.NewArangoDBClient("root", "jalapeno", "jalapeno"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate new Arango client with error: %w", err)
 	}
