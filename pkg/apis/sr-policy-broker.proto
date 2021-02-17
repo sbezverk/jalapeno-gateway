@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package apis;
+
+// SRv6 Sidecar on behalf of a client, requesting SR Policy from the broker providing:
+// - Client's IPv4 or IPv6 address
+// - Service's IPV4 or IPv6 address
+// Both addresses are required because jalapeno-gateway might need to get SRH's segment list 
+// between the service and the client.
+// - Service's proto (TCP, UDP, Other, None)
+// - Service's port (uint16, None)
+// - Clinet's meta (new ipv6 extension header or some similar for additional client specific information)
+
+// Types of policies:
+// - SRH policy, defines cient's specific constraints which should be used in the computation of SRH segment list.
+// - Encapsulation policy, where an outer header gets provided to the sidecar to encapsulate original packet.
+// - Path Tracing header, if client's data packet must be decorated with a path tracing header.
+// - Combination of SRH + PT or Encapsulation + PT
+
+// TODO: define structure for each policy type.
