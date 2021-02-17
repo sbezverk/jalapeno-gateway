@@ -18,3 +18,26 @@ package apis;
 // - Combination of SRH + PT or Encapsulation + PT
 
 // TODO: define structure for each policy type.
+message SRH {
+    map<uint32, bytes> segment_list = 1;
+}
+message Encap {
+// Should the broker send complete encapsulation header, or just provide a destination IP to use and then the
+// sidecar will build a new header based on old header and the new destination?
+}
+message PT {
+// @Ahmed: Which parametera would make sense to pass to the sidecar in order to construct Path Tracing
+// extension header? The idea is to decorate all outgoing packets from the service towards the client
+// with Path Tracing extension header.
+}
+message ClientPolicy {
+    // Any of:
+    // SRH
+    // Encap
+    // PT
+    google.protobuf.Any client_policy = 1;
+}
+
+message Policy {
+    repeated ClientPolicy policies = 1;
+}
